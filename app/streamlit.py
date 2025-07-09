@@ -233,7 +233,7 @@ def monthly_analysis(dataframe, months):
     st.plotly_chart(pie)
 
 if spotify_upload or youtube_upload or apple_upload:
-    spotify, youtube, apple = None, None
+    spotify, youtube, apple = None, None, None
 
     platform_options = []
     if spotify_upload:
