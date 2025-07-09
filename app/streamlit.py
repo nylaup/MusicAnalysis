@@ -4,7 +4,7 @@ import plotly.express as px
 import calendar, re
 from io import StringIO
 
-with open("style.css") as f:
+with open("app/style.css") as f:
     st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 st.set_page_config(page_title="Listnd Dashboad", layout="wide")
