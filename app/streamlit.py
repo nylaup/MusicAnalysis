@@ -13,7 +13,7 @@ youtube_upload = st.file_uploader("Upload Youtube File", type=["json"])
 year = st.selectbox("Select Year", [2023, 2024, 2025], index=1)
 
 def parse_contents(contents):
-    stringio = StringIO(upload.getvalue().decode("utf-8"))
+    stringio = StringIO(contents.getvalue().decode("utf-8"))
     return pd.read_json(stringio)
 
 def clean_spotify(spotify, year): 
