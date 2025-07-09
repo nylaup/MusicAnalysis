@@ -175,9 +175,9 @@ if spotify_upload or youtube_upload:
         youtube = clean_youtube(youtube, year=year)
 
     platform_options = []
-    if spotify_content:
+    if spotify:
         platform_options.append('spotify')
-    if youtube_content:
+    if youtube:
         platform_options.append('youtube')
     platforms = st.multiselect("Select Platforms:", options=platform_options, default=platform_options)
 
