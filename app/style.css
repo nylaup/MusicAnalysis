@@ -5,24 +5,13 @@ section.main > div {
     background-color: #d7ead1 !important; 
 }
 
+body {
+    border: 10px solid red;
+}
+
 html, body, .stApp {
     font-family: 'Poppins', sans-serif;
     background-color: #d7ead1 !important; 
-}
-
-h1, h2, h3 {
-    color: #4a90e2;
-}
-
-.stButton > button {
-    background-color: #4a90e2;
-    color: white;
-    font-weight: bold;
-    border-radius: 8px;
-}
-
-.stUpload {
-    border: 2px dashed #4a90e2;
 }
 
 /*For info box*/
