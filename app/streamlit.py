@@ -4,16 +4,16 @@ import plotly.express as px
 import calendar, re
 from io import StringIO
 
-with open("app/style.css") as f:
+with open("style.css") as f:
     st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
-st.set_page_config(page_title="Listnd Dashboad", layout="wide")
+st.set_page_config(page_title="Listnd Dashboard", layout="wide")
 st.title("Listnd Dashboard for the Year")
 
 #popup with instructions
 with st.expander("Instructions"):
     st.markdown("""
-    #####Welcome to Listnd, an app that tells you about your listening history across music listening platforms!     
+    ##### Welcome to Listnd, an app that tells you about your listening history across music listening platforms!     
     If you use multiple streaming platforms and have always wanted to know, comprehensively, who is your top artist? 
     Here is the place for you to find out!           
     In order to do this however (works best on a computer), you do have to separately request your data
@@ -43,13 +43,13 @@ with st.expander("Instructions"):
     Upload this file to the site in the Apple Music section.     
     """)
 
-st.markdown("####Upload Spotify File")
+st.markdown("#### Upload Spotify File")
 spotify_upload = st.file_uploader("StreamingHistory_music_0", type=["json"])
 
-st.markdown("####Upload YouTube Music File")
+st.markdown("#### Upload YouTube Music File")
 youtube_upload = st.file_uploader("watch-history", type=["json"])
 
-st.markdown("####Upload Apple Music File")
+st.markdown("#### Upload Apple Music File")
 apple_upload = st.file_uploader("Apple Music Play Activity", type=["csv"])
 
 year = st.selectbox("Select Year", [2023, 2024, 2025], index=1)
