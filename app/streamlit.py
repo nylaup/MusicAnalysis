@@ -4,6 +4,9 @@ import plotly.express as px
 import calendar, re
 from io import StringIO
 
+with open("style.css") as f:
+    st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+
 st.set_page_config(page_title="Listnd Dashboad", layout="wide")
 st.title("Listnd Dashboard for the Year")
 
@@ -46,7 +49,7 @@ spotify_upload = st.file_uploader("StreamingHistory_music_0", type=["json"])
 st.markdown("####Upload YouTube Music File")
 youtube_upload = st.file_uploader("watch-history", type=["json"])
 
-st.markdown("####Upload Apple Music File"
+st.markdown("####Upload Apple Music File")
 apple_upload = st.file_uploader("Apple Music Play Activity"), type=["csv"])
 
 year = st.selectbox("Select Year", [2023, 2024, 2025], index=1)
