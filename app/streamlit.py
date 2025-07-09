@@ -3,9 +3,14 @@ import pandas as pd
 import plotly.express as px
 import calendar, re
 from io import StringIO
+from pathlib import Path
 
-with open("app/style.css") as f:
-    st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+style_path = Path(__file__).parent / "style.css"
+
+if style_path.exists():
+    st.markdown(f"<style>{style_path.read_text()}</style>", unsafe_allow_html=True)
+else:
+    st.error("style.css not found.")
 
 st.set_page_config(page_title="Listnd Dashboard", layout="wide")
 st.title("Listnd Dashboard for the Year")
