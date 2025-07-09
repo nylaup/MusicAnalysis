@@ -8,13 +8,18 @@ st.set_page_config(page_title="Listnd Dashboad", layout="wide")
 st.title("Listnd Dashboard for the Year")
 
 spotify_upload = st.file_uploader("Upload Spotify File", type=["json"])
-youtube_upload = st.file_uploader("Upload Youtube File", type=["json"])
+youtube_upload = st.file_uploader("Upload Youtube Music File", type=["json"])
+apple_upload = st.file_uploader("Upload Apple Music File", type=["csv"])
 
 year = st.selectbox("Select Year", [2023, 2024, 2025], index=1)
 
-def parse_contents(contents):
+def parse_json(contents):
     stringio = StringIO(contents.getvalue().decode("utf-8"))
     return pd.read_json(stringio)
+
+def parse_csv(contents):
+    return pd.read_csv(contents)
+
 
 def clean_spotify(spotify, year): 
     #Convert spotify endTime to datetime
@@ -23,7 +28,7 @@ def clean_spotify(spotify, year):
     spotify['month'] = spotify['endTime'].dt.month
     spotify['hour'] = spotify['endTime'].dt.hour
     spotify['year'] = spotify['endTime'].dt.year
-    spotify = spotify[spotify['year']==year] #only data from 2024
+    spotify = spotify[spotify['year']==year] #only data from selected year
     spotify.rename(columns={'artistName': 'artist', 'trackName': 'title'}, inplace=True) #rename columns
     return spotify
 
@@ -37,7 +42,7 @@ def clean_youtube(youtube, year):
     youtube['month'] = youtube['ListTime'].dt.month
     youtube['hour'] = youtube['ListTime'].dt.hour
     youtube['year'] = youtube['ListTime'].dt.year
-    youtube = youtube[youtube['year']==year] #only take data from 2024
+    youtube = youtube[youtube['year']==year] #only take data from selected year
 
     #Clean Youtube Song Titles
     def delete_watched(value): #Eliminate 'Watched' from song titles
@@ -95,7 +100,20 @@ def clean_youtube(youtube, year):
 
     return youtube
 
-def dataframe_merge(spotifydf, youtubedf, selected_platform):
+def clean_apple(apple, year):
+    apple = apple[apple['Content Specific Type']=='Song'] #only take data of songs
+    #Convert apple endTime to datetime
+    apple['Event End Timestamp'] = pd.to_datetime(apple['Event End Timestamp']) 
+    apple['date'] = apple['Event End Timestamp'].dt.date
+    apple['month'] = apple['Event End Timestamp'].dt.month
+    apple['hour'] = apple['Event End Timestamp'].dt.hour
+    apple['year'] = apple['Event End Timestamp'].dt.year
+    apple = apple[apple['year']==year] #only data from selected year
+    apple.rename(columns={'Artist Name': 'artist', 'Content Name': 'title'}, inplace=True) #rename columns
+
+    return apple
+
+def dataframe_merge(spotifydf, youtubedf, appledf, selected_platform):
     df = []
 
     if 'spotify' in selected_platform:
@@ -107,6 +125,11 @@ def dataframe_merge(spotifydf, youtubedf, selected_platform):
         youtube2 = youtubedf[['artist', 'title', 'date', 'hour', 'month']]
         youtube2['platform'] = 'youtube'
         df.append(youtube2)
+
+    if 'apple' in selected_platform:
+        apple2 = appledf[['artist', 'title', 'date', 'hour', 'month']]
+        apple2['platform'] = 'apple'
+        df.append(apple2)
 
     if df:
         music = pd.concat(df, ignore_index=True)
@@ -150,7 +173,7 @@ def make_topartists(dataframe):
 
 def make_platform(dataframe, platforms):
     if len(platforms) == 1:
-        return html.Div(f"Analysed all of your data from {platforms[0]} :)")
+        st.success(f"Analysed all of your data from {', '.join(platforms)} :)")
     fig = px.histogram(dataframe, x='date', color='platform', nbins=24, barmode='stack',
     title='Platforms Used Throughout The Year')
     fig.update_layout(xaxis_title='date', yaxis_title='songs')
@@ -163,24 +186,29 @@ def monthly_analysis(dataframe, months):
     pie = px.pie(top5, values='count', names='artist', title="Top 5 Artists for Select Months")
     st.plotly_chart(pie)
 
-if spotify_upload or youtube_upload:
-    spotify, youtube = None, None
+if spotify_upload or youtube_upload or apple_upload:
+    spotify, youtube, apple = None, None
 
     platform_options = []
     if spotify_upload:
-        spotify = parse_contents(spotify_upload)
+        spotify = parse_json(spotify_upload)
         spotify = clean_spotify(spotify, year=year)
         platform_options.append('spotify') 
 
     if youtube_upload:
-        youtube = parse_contents(youtube_upload)
+        youtube = parse_json(youtube_upload)
         youtube = clean_youtube(youtube, year=year)
         platform_options.append('youtube')
+
+    if apple_upload:
+        apple = parse_csv(apple_upload)
+        apple = clean_apple(apple, year=year)
+        platform_options.append('apple')
 
     platforms = st.multiselect("Select Platforms:", options=platform_options, default=platform_options)
 
     if platforms:
-        music = dataframe_merge(spotify, youtube, platforms)
+        music = dataframe_merge(spotify, youtube, apple, platforms)
     
         if music.empty:
             st.warning("No data found after filtering.")
