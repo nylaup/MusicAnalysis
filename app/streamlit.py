@@ -1,8 +1,8 @@
-import pandas as pd
 import streamlit as st
+import pandas as pd
 import plotly.express as px
-import re, dash, base64, calendar, webbrowser
-from io import BytesIO, StringIO
+import calendar, re
+from io import StringIO
 
 st.set_page_config(page_title="Listnd Dashboad", layout="wide")
 st.title("Listnd Dashboard for the Year")
