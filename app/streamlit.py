@@ -50,7 +50,7 @@ st.markdown("####Upload YouTube Music File")
 youtube_upload = st.file_uploader("watch-history", type=["json"])
 
 st.markdown("####Upload Apple Music File")
-apple_upload = st.file_uploader("Apple Music Play Activity"), type=["csv"])
+apple_upload = st.file_uploader("Apple Music Play Activity", type=["csv"])
 
 year = st.selectbox("Select Year", [2023, 2024, 2025], index=1)
 
