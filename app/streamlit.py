@@ -7,9 +7,35 @@ from io import StringIO
 st.set_page_config(page_title="Listnd Dashboad", layout="wide")
 st.title("Listnd Dashboard for the Year")
 
-spotify_upload = st.file_uploader("Upload Spotify File", type=["json"])
-youtube_upload = st.file_uploader("Upload Youtube Music File", type=["json"])
-apple_upload = st.file_uploader("Upload Apple Music File", type=["csv"])
+#popup with instructions
+with st.expander("Instructions"):
+    st.markdown("""
+    **Welcome to Listnd, an app that tells you about your listening history across music listening platforms!**
+    If you use multiple streaming platforms and have always wanted to know, comprehensively, who is your top artist? 
+    Here is the place for you to find out! In order to do this however, you do have to separately request your data
+    from each platform you use... which can take a couple hours... stay with me here.      
+    Fortunately here are convenient instructions for how to do so:
+
+    ### Spotify
+        Go to account settings > Security and Privacy > Account Privacy > Download Your Data > Select Account Data > Request Data 
+        You may have to confirm this request in an email. Once you get the email confirming your data is ready to download, press Download. You will get a zipped file, which you will have to unzip. 
+        To find the file we need: Spotify Account Data / StreamingHistory_music_0.json
+        Upload this file to the site in the Spotify section.
+
+    ### Youtube Music
+        Go to Google Takeout for the account you want to get data for. From there deselect all checkboxes except 'Youtube and Youtube Music'. Click on Multiple Formats and scroll down to find 'history' and change the dropdown from HTML to JSON then click OK. Click 'All YouTube data included' and deselect all checkboxes except 'history' then click OK. Press Next Step and ensure you can access where it is being downloaded to, it will only Export Once, and the file type is a .zip. Then Create Export. 
+        Once you get the email confirming your data is ready to download, download it. You may have to unzip this file. 
+        To find the file we need: Takeout / YouTube and YouTube Music / history / watch-history.json
+        Upload this file to the site in the YouTube Music section. 
+
+    ### Apple Music
+        Go to your Apple ID account, request a copy of your data and select only apple music data. Wait until your data file is ready, then download this file. You may have to unzip thsi file.
+        To find the file we need: Apple_Media_Services.zip / Apple Music Activity / Apple Music Play Activity.csv
+    """)
+
+spotify_upload = st.file_uploader("####Upload Spotify File", type=["json"])
+youtube_upload = st.file_uploader("####Upload Youtube Music File", type=["json"])
+apple_upload = st.file_uploader("####Upload Apple Music File", type=["csv"])
 
 year = st.selectbox("Select Year", [2023, 2024, 2025], index=1)
 
