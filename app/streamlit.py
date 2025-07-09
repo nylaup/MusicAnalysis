@@ -168,17 +168,14 @@ if spotify_upload or youtube_upload:
 
     if spotify_upload:
         spotify = parse_contents(spotify_upload)
-        spotify = clean_spotify(spotify, year=year) 
+        spotify = clean_spotify(spotify, year=year)
+        platform_options.append('spotify') 
 
     if youtube_upload:
         youtube = parse_contents(youtube_upload)
         youtube = clean_youtube(youtube, year=year)
-
-    platform_options = []
-    if spotify:
-        platform_options.append('spotify')
-    if youtube:
         platform_options.append('youtube')
+
     platforms = st.multiselect("Select Platforms:", options=platform_options, default=platform_options)
 
     if platforms:
