@@ -2,12 +2,12 @@
 
 
 section.main > div {
-    background-color: #c8e3beff;
+    background-color: #d7ead1 !important; 
 }
 
 html, body, .stApp {
-    font-family: 'Poppins';
-    background-color: #c8e3beff !important;
+    font-family: 'Poppins', sans-serif;
+    background-color: #d7ead1 !important; 
 }
 
 h1, h2, h3 {
@@ -23,6 +23,21 @@ h1, h2, h3 {
 
 .stUpload {
     border: 2px dashed #4a90e2;
+}
+
+/*For info box*/
+.st-expanderHeader {
+    background-color: #fbfff9 !important;
+}
+.st-expanderContent {
+    background-color: #e9f1e6 !important;
+}
+
+/*For Upload instructions*/
+div.stAlert[data-testid="stAlert-info"] {
+    background-color: #f4edf0ff !important;
+    border-left: 5px solid #e2ccd4 !important; 
+    color: #7c2a49 !important;  
 }
 
 .stMarkdown {
