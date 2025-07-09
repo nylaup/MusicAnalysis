@@ -185,7 +185,7 @@ if spotify_upload or youtube_upload:
         music = dataframe_merge(spotify, youtube, platforms)
     
         if music.empty:
-            return html.Div("No data available"), None, None, None
+            st.warning("No data found after filtering.")
         if not music.empty:
             st.header("Top Songs")
             make_topsongs(music)
