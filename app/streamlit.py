@@ -46,6 +46,7 @@ with st.expander("Instructions"):
     Wait until your data file is ready, then download this file. You may have to unzip this file.      
     To find the file we need: Apple_Media_Services.zip / Apple Music Activity / Apple Music Play Activity.csv     
     Upload this file to the site in the Apple Music section.     
+    (I think this should work?)    
     """)
 
 st.markdown("#### Upload Spotify File")
@@ -266,7 +267,7 @@ if spotify_upload or youtube_upload or apple_upload:
 
             st.header("Monthly Analysis")
             month_options={i:month for i, month in enumerate(calendar.month_name) if month}
-            selected_months = st.multiselect("Select Months", options=list(month_options.keys()),
+            selected_months = st.multiselect("Select Months for Further Analysis", options=list(month_options.keys()),
                 format_func=lambda x: month_options[x], default=[1])
             if selected_months:
                 monthly_analysis(music, selected_months)
