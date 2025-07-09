@@ -166,6 +166,7 @@ def monthly_analysis(dataframe, months):
 if spotify_upload or youtube_upload:
     spotify, youtube = None, None
 
+    platform_options = []
     if spotify_upload:
         spotify = parse_contents(spotify_upload)
         spotify = clean_spotify(spotify, year=year)
