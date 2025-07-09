@@ -7,8 +7,8 @@ from io import StringIO
 st.set_page_config(page_title="Listnd Dashboad", layout="wide")
 st.title("Listnd Dashboard for the Year")
 
-spotify_upload = st.file_uploader("Upload Spotify File", type["json"])
-youtube_upload = st.file_uploader("Upload Youtube File", type["json"])
+spotify_upload = st.file_uploader("Upload Spotify File", type=["json"])
+youtube_upload = st.file_uploader("Upload Youtube File", type=["json"])
 
 year = st.selectbox("Select Year", [2023, 2024, 2025], index=1)
 
