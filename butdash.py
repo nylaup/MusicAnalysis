@@ -2,13 +2,14 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import plotly.express as px
 import re, dash, base64, calendar, webbrowser
-from dash import dcc, html, Dash, Input, Output
-from io import BytesIO
+from dash import dcc, html, Dash, Input, Output, State
+from io import BytesIO, StringIO
 
-
-#Read in Data 
-spotify = pd.read_json('Spotify Account Data\StreamingHistory_music_0.json')
-youtube = pd.read_json('Takeout\YouTube and YouTube Music\history\watch-history.json')
+def parse_contents(contents):
+    #For parsing inputted json files 
+    content_type, content_string = contents.split(',')
+    decoded = base64.b64decode(content_string)
+    return pd.read_json(StringIO(decoded.decode('utf-8')))
 
 def clean_spotify(spotify, year): 
     #Convert spotify endTime to datetime
@@ -106,9 +107,6 @@ def dataframe_merge(spotifydf, youtubedf, selected_platform):
         music = pd.concat(df, ignore_index=True)
         return music
 
-spotify = clean_spotify(spotify, year=2024)
-youtube = clean_youtube(youtube, year=2024)
-
 def make_topsongs(dataframe):
     song_counts = dataframe.groupby(['title', 'artist']).size().reset_index(name='count')
     top10 = song_counts.sort_values('count', ascending=False).head(10)
@@ -161,14 +159,34 @@ app=Dash() #Create app
 app.title="Listnd"
 
 app.layout = html.Div([
+    dcc.Store(id='stored-data'),
     html.H1("Listnd Dashboard for the Year"),
+
+    html.Div([
+        html.Label("Upload Spotify Data:"),
+        dcc.Upload(
+            id='spotify-upload',
+            children=html.Div(['Drag and Drop or ', html.A('Select Files')]),
+            style={'width': '100%', 'height': '60px', 'lineHeight': '60px', 'borderWidth': '1px',
+            'borderStyle': 'dashed', 'borderRadius': '5px', 'textAlign': 'center','margin': '10px'},
+            multiple = False
+        ),
+        html.Label("Upload Youtube Music Data:"),
+        dcc.Upload(
+            id='youtube-upload',
+            children=html.Div(['Drag and Drop or ', html.A('Select Files')]),
+            style={'width': '100%', 'height': '60px', 'lineHeight': '60px', 'borderWidth': '1px',
+            'borderStyle': 'dashed', 'borderRadius': '5px', 'textAlign': 'center','margin': '10px'},
+            multiple = False
+        )
+    ]),
     html.Div([
         html.Div([
             html.Label("Select Platforms:"),
             dcc.Dropdown(
                 id='platform-selected',
-                options=[{'label': p, 'value': p.lower()} for p in ['Spotify', 'YouTube']],
-                value=['spotify', 'youtube'],multi=True
+                options=[],
+                value=[],multi=True
             )
         ], style={'width': '48%', 'padding': '10px'}),
 
@@ -181,6 +199,7 @@ app.layout = html.Div([
             )
         ], style={'width': '48%', 'padding': '10px'}),
     ], style={'display': 'flex', 'flex-wrap': 'wrap', 'margin-bottom': '20px'}),
+    html.Button('Generate Analysis', id='generate-button', n_clicks=0, style={'margin': '20px 0'}),
     html.H2("Top Songs"),
     html.Div(id='topsongs-graph'),
     html.H2("Top Artists"),
@@ -207,30 +226,104 @@ app.layout = html.Div([
 ], style={'max-width': '1200px', 'margin': '0 auto', 'font-family': 'Calibri, sans-serif'}
 )
 
+@app.callback(
+    Output('stored-data', 'data'),
+    Input('generate-button', 'n_clicks'),
+    State('spotify-upload', 'contents'),
+    State('youtube-upload', 'contents'),
+    State('platform-selected', 'value'),
+    State('year-selected', 'value')
+)
 
+def load_and_store(n_clicks, spotify_upload, youtube_upload, platforms, year):
+    if n_clicks == 0:
+        return None
+    
+    spotify, youtube = None, None
+
+    if spotify_upload:
+        spotify = parse_contents(spotify_upload)
+        spotify = clean_spotify(spotify, year=year) 
+
+    if youtube_upload:
+        youtube = parse_contents(youtube_upload)
+        youtube = clean_youtube(youtube, year=year)
+
+    # Filter music by platform
+    music = dataframe_merge(spotify, youtube, platforms)
+    if music is None or music.empty:
+        return html.Div("No data available")
+    
+    return music.to_json(date_format='iso', orient='split')
 
 @app.callback(
     Output('topsongs-graph', 'children'),
     Output('topartists-graphs', 'children'),
     Output('monthly-graphs', 'children'),
     Output('platform-graph', 'children'),
-    Input('platform-selected', 'value'),
+    Input('stored-data', 'data'),
     Input('year-selected', 'value'),
-    Input('monthly', 'value')
+    Input('monthly', 'value'),
+    Input('platform-selected', 'value')
 )
 
-def update_graphs(selected_platforms, selected_year, selected_months):
-    # Filter music by platform and year
-    music = dataframe_merge(spotify, youtube, selected_platforms)
-    music = music[music['date'].dt.year == int(selected_year)]
+def update_graphs(data, selected_year, selected_months, selected_platforms):
+    if data is None:
+        return None, None, None, None 
+
+    music = pd.read_json(data, orient='split')
     
-    # Build figures (you can modularize to helper functions passing filtered_music)
+    music = music[music['date'].dt.year == int(selected_year)]
+    music = music[music['platform'].isin(selected_platforms)]
+
+    if music.empty:
+        return html.Div("No data available"), None, None, None
+
     top_songs_fig = make_topsongs(music)
     top_artists_figs = make_topartists(music)
     monthly_fig = monthly_analysis(music, selected_months)
     platform_fig = make_platform(music, selected_platforms)
 
     return top_songs_fig, top_artists_figs, monthly_fig, platform_fig
+
+
+@app.callback(
+    Output('platform-selected', 'options'),
+    Output('platform-selected', 'value'),
+    Input('spotify-upload', 'contents'),
+    Input('youtube-upload', 'contents'),
+    prevent_initial_call=True
+)
+def update_platform_dropdown(spotify_content, youtube_content):
+    options = []
+    values = []
+    if spotify_content:
+        options.append({'label': 'Spotify', 'value': 'spotify'})
+        values.append('spotify')
+    if youtube_content:
+        options.append({'label': 'YouTube', 'value': 'youtube'})
+        values.append('youtube')
+    return options, values
+
+@app.callback(
+    Output('spotify-upload', 'children'),
+    Input('spotify-upload', 'filename'),
+    prevent_initial_call=True
+)
+def update_spotify_upload(filename):
+    if filename:
+        return html.Div(f"Uploaded: {filename}")
+    return html.Div(['Drag and Drop or ', html.A('Select Files')])
+
+@app.callback(
+    Output('youtube-upload', 'children'),
+    Input('youtube-upload', 'filename'),
+    prevent_initial_call=True
+)
+def update_youtube_upload(filename):
+    if filename:
+        return html.Div(f"Uploaded: {filename}")
+    return html.Div(['Drag and Drop or ', html.A('Select Files')])
 
 
 if __name__=="__main__":
