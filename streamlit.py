@@ -184,6 +184,36 @@ def dataframe_merge(spotifydf, youtubedf, appledf, selected_platform):
         music = pd.concat(df, ignore_index=True)
         return music
 
+def make_facts(dataframe):
+    #Biggest listening day and artist for that day 
+    daily_counts = music.groupby(['date']).size().reset_index(name='listen_count').sort_values('listen_count', ascending=False)
+    top_day = pd.to_datetime(daily_counts.head(1)['date'].values[0]).strftime('%Y-%m-%d')
+    topday_count = daily_counts.head(1)['listen_count'].values[0]
+    topday_df = music[music['date']==top_day]
+    topday_df = topday_df.groupby(['artist']).size().reset_index(name='listen_count').sort_values('listen_count', ascending=False)
+    topday_artist = topday_df.head(1)['artist'].values[0]
+    top_day = pd.to_datetime(top_day).strftime('%m-%d')
+    topday_text = ("You listened to", topday_count, "songs on", top_day+ "! Big day for you. Big day for being a fan of", topday_artist, "too it seems.")
+    st.text(topday_text)
+
+    #Most repeated song on one day
+    repeat_counts = music.groupby(['date','title']).size().reset_index(name='listen_count').sort_values('listen_count', ascending=False)
+    repeated_song = repeat_counts.head(1)['title'].values[0]
+    repeated_day = pd.to_datetime(repeat_counts.head(1)['date'].values[0]).strftime('%m-%d')
+    repeated_counts = repeat_counts.head(1)['listen_count'].values[0]
+    repeat_text = print("You listened to", repeated_song, repeated_counts, "times on", repeated_day+ ". A new record for you. It's that good?")
+    st.text(repeat_text)
+
+    #Number of unique songs listened to
+    num_songs=repeat_counts.size
+    if num_songs > 15921:
+        num_text = ("Wow! You listened to", num_songs, "songs this year. Better than me...")
+    elif num_songs < 15921:
+        num_text = ("Huh, you only listened to", num_songs, "songs... I could do better.")
+    else:
+        num_text = ("You listened to", num_songs, "songs. Samesies!")
+    st.text(num_text)
+
 def make_topsongs(dataframe):
     song_counts = dataframe.groupby(['title', 'artist']).size().reset_index(name='count')
     top10 = song_counts.sort_values('count', ascending=False).head(10)
@@ -291,11 +321,17 @@ if spotify_upload or youtube_upload or apple_upload:
             chosen_line = st.radio("Select what to see top 5 of:", options=["Artists", "Songs"], index=0)
             make_choiceline(music, chosen_line)
 
+            st.header("Listening Facts")
+            make_facts(music)
+
             st.header("Monthly Analysis")
             month_options={i:month for i, month in enumerate(calendar.month_name) if month}
             selected_months = st.multiselect("Select Months for Further Analysis", options=list(month_options.keys()),
                 format_func=lambda x: month_options[x], default=[1])
             if selected_months:
                 monthly_analysis(music, selected_months)
+
+            st.header("Platform Analysis")
+            make_platform(music, platforms)
 else:
     st.info("Upload at least one file")
