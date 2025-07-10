@@ -224,7 +224,7 @@ def make_choiceline(dataframe, line_choice):
         top5_song = music[music['title'].isin(top5_song)]
         monthly_song = top5_song.groupby(['title', 'month']).size().reset_index(name='listen_count')
 
-        fig = px.line(monthly_song, x="month", y="listen_count", color="title", title="Top 5 Songs Through the Year")
+        line = px.line(monthly_song, x="month", y="listen_count", color="title", title="Top 5 Songs Through the Year")
         line.update_layout(xaxis_title='Month of Year', yaxis_title='Listen Count')
         st.plotly_chart(line)
 
