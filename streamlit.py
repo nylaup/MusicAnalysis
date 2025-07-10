@@ -230,7 +230,9 @@ def make_choiceline(dataframe, line_choice):
 
     elif line_choice == "Artists":
         #For line graph of top 5 artists over time
-        top5_art = top_artist['artist'].head(5).unique() #list of top 5 artists
+        artist_counts = dataframe.groupby(['artist', 'artist']).size().reset_index(name='count')
+        top10 = artist_counts.sort_values('count', ascending=False).head(10)
+        top5 = top10['artist'].head(5).unique()
         top5 = dataframe[dataframe['artist'].isin(top5_art)]
         monthly_counts = top5.groupby(['artist', 'month']).size().reset_index(name='listen_count')
 
