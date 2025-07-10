@@ -39,10 +39,12 @@ with st.expander("Instructions"):
      access where it is being downloaded to, it will only Export Once, and the file type is a .zip. Then Create Export.        
     Once you get the email confirming your data is ready to download, download it. You may have to unzip this file.       
     To find the file we need: Takeout / YouTube and YouTube Music / history / watch-history.json      
-    Upload this file to the site in the YouTube Music section.       
+    Upload this file to the site in the YouTube Music section.    
+    (Disclaimer: the way YouTube stores data is slighly strange so this may not be completely accurate )          
 
     ### Apple Music      
-    Go to your Apple ID account, request a copy of your data and select only apple music data. 
+    Go to your Apple account > Privacy > Your Data > Manage your data > Get a copy of your data        
+    Then select the checkbox for Apple Media Services Information, Continue, then Complete Request.  
     Wait until your data file is ready, then download this file. You may have to unzip this file.      
     To find the file we need: Apple_Media_Services.zip / Apple Music Activity / Apple Music Play Activity.csv     
     Upload this file to the site in the Apple Music section.     
@@ -58,7 +60,7 @@ youtube_upload = st.file_uploader("watch-history", type=["json"])
 st.markdown("#### Upload Apple Music File")
 apple_upload = st.file_uploader("Apple Music Play Activity", type=["csv"])
 
-year = st.selectbox("Select Year", [2023, 2024, 2025], index=1)
+year = st.multiselect("Select Year", [2023, 2024, 2025], default=[2024])
 
 def parse_json(contents):
     stringio = StringIO(contents.getvalue().decode("utf-8"))
@@ -75,7 +77,7 @@ def clean_spotify(spotify, year):
     spotify['month'] = spotify['endTime'].dt.month
     spotify['hour'] = spotify['endTime'].dt.hour
     spotify['year'] = spotify['endTime'].dt.year
-    spotify = spotify[spotify['year']==year] #only data from selected year
+    spotify = spotify[spotify['year'].isin(year)] #only data from selected years
     spotify.rename(columns={'artistName': 'artist', 'trackName': 'title'}, inplace=True) #rename columns
     return spotify
 
@@ -89,7 +91,7 @@ def clean_youtube(youtube, year):
     youtube['month'] = youtube['ListTime'].dt.month
     youtube['hour'] = youtube['ListTime'].dt.hour
     youtube['year'] = youtube['ListTime'].dt.year
-    youtube = youtube[youtube['year']==year] #only take data from selected year
+    youtube = youtube[youtube['year'].isin(year)] #only take data from selected year
 
     #Clean Youtube Song Titles
     def delete_watched(value): #Eliminate 'Watched' from song titles
@@ -155,7 +157,7 @@ def clean_apple(apple, year):
     apple['month'] = apple['Event End Timestamp'].dt.month
     apple['hour'] = apple['Event End Timestamp'].dt.hour
     apple['year'] = apple['Event End Timestamp'].dt.year
-    apple = apple[apple['year']==year] #only data from selected year
+    apple = apple[apple['year'].isin(year)] #only data from selected year
     apple.rename(columns={'Artist Name': 'artist', 'Content Name': 'title'}, inplace=True) #rename columns
 
     return apple
