@@ -287,10 +287,11 @@ def make_topartists(dataframe):
 def make_platform(dataframe, platforms):
     if len(platforms) == 1:
         st.success(f"Analysed all of your data from {', '.join(platforms)} :)")
-    fig = px.histogram(dataframe, x='date', color='platform', nbins=24, barmode='stack',
-    title='Platforms Used Throughout The Year')
-    fig.update_layout(xaxis_title='date', yaxis_title='songs')
-    st.plotly_chart(fig)
+    else: 
+        fig = px.histogram(dataframe, x='date', color='platform', nbins=24, barmode='stack',
+        title='Platforms Used Throughout The Year')
+        fig.update_layout(xaxis_title='date', yaxis_title='songs')
+        st.plotly_chart(fig)
 
 def monthly_analysis(dataframe, months, subject):
     mdf = dataframe[dataframe['month'].isin(months)]
@@ -311,7 +312,7 @@ def artist_info(dataframe, chosen_artist):
     favsongs = bigdog_music['title'].tolist()
 
     first_listen = bigdog['date'].min().strftime('%m-%d')
-    say= f"Love at first sight... On {first_listen}, precisely, for you and {chosen_artist} that is. \nSince then you've been a big fan of {", ".join((favsongs)[:2])} and {favsongs[2]}."
+    say= f"Love at first sight... On {first_listen}, precisely, for you and {chosen_artist} that is. \nSince then you've been a big fan of {", ".join((favsongs)[:2])}, and {favsongs[2]}."
     st.text(say)
 
 if spotify_upload or youtube_upload or apple_upload:
