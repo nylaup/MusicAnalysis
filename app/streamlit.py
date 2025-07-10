@@ -211,14 +211,32 @@ def make_topartists(dataframe):
 
     pie = px.pie(artist10, values='count', names='artist', title="Top 10 Artists")
     st.plotly_chart(pie)
-
-    line = px.line(monthly_counts, x="month", y="listen_count", color="artist", title="Top 5 Artists Through the Year")
-    line.update_layout(xaxis_title='Month of Year', yaxis_title='Listen Count')
-    st.plotly_chart(line)
-
+    
     bar = px.histogram(top5, x='hour', color='artist', nbins=24, barmode='stack', title='Top 5 Artists Through the Day')
     bar.update_layout(xaxis_title='Hour of Day', yaxis_title='Listen Count')
     st.plotly_chart(bar)
+
+def make_choiceline(dataframe, line_choice):
+    if line_choice == "songs":
+        song_counts = dataframe.groupby(['title', 'artist']).size().reset_index(name='count')
+        top10 = song_counts.sort_values('count', ascending=False).head(10)
+        top5_song = top10['title'].head(5).unique() #list of top 5 songs
+        top5_song = music[music['title'].isin(top5_song)]
+        monthly_song = top5_song.groupby(['title', 'month']).size().reset_index(name='listen_count')
+
+        fig = px.line(monthly_song, x="month", y="listen_count", color="title", title="Top 5 Songs Through the Year")
+        line.update_layout(xaxis_title='Month of Year', yaxis_title='Listen Count')
+        st.plotly_chart(line)
+
+    elif line_choice == "artists":
+        #For line graph of top 5 artists over time
+        top5_art = top_artist['artist'].head(5).unique() #list of top 5 artists
+        top5 = dataframe[dataframe['artist'].isin(top5_art)]
+        monthly_counts = top5.groupby(['artist', 'month']).size().reset_index(name='listen_count')
+
+        line = px.line(monthly_counts, x="month", y="listen_count", color="artist", title="Top 5 Artists Through the Year")
+        line.update_layout(xaxis_title='Month of Year', yaxis_title='Listen Count')
+        st.plotly_chart(line)
 
 def make_platform(dataframe, platforms):
     if len(platforms) == 1:
@@ -266,6 +284,11 @@ if spotify_upload or youtube_upload or apple_upload:
             make_topsongs(music)
             st.header("Top Artists")
             make_topartists(music)
+
+            st.header("Top 5 in the Year")
+            chosen_line = st.radio("Select what to see top 5 of:", options=["Artists", "Songs"], default=["Artists"])
+            if chosen_line:
+                make_choiceline(music, chosen_line)
 
             st.header("Monthly Analysis")
             month_options={i:month for i, month in enumerate(calendar.month_name) if month}
