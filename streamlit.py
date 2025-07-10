@@ -217,7 +217,7 @@ def make_topartists(dataframe):
     st.plotly_chart(bar)
 
 def make_choiceline(dataframe, line_choice):
-    if line_choice == "songs":
+    if line_choice == "Songs":
         song_counts = dataframe.groupby(['title', 'artist']).size().reset_index(name='count')
         top10 = song_counts.sort_values('count', ascending=False).head(10)
         top5_song = top10['title'].head(5).unique() #list of top 5 songs
@@ -228,7 +228,7 @@ def make_choiceline(dataframe, line_choice):
         line.update_layout(xaxis_title='Month of Year', yaxis_title='Listen Count')
         st.plotly_chart(line)
 
-    elif line_choice == "artists":
+    elif line_choice == "Artists":
         #For line graph of top 5 artists over time
         top5_art = top_artist['artist'].head(5).unique() #list of top 5 artists
         top5 = dataframe[dataframe['artist'].isin(top5_art)]
@@ -287,8 +287,7 @@ if spotify_upload or youtube_upload or apple_upload:
 
             st.header("Top 5 in the Year")
             chosen_line = st.radio("Select what to see top 5 of:", options=["Artists", "Songs"], index=0)
-            if chosen_line:
-                make_choiceline(music, chosen_line)
+            make_choiceline(music, chosen_line)
 
             st.header("Monthly Analysis")
             month_options={i:month for i, month in enumerate(calendar.month_name) if month}
