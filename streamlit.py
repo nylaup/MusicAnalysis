@@ -221,8 +221,8 @@ def make_choiceline(dataframe, line_choice):
         song_counts = dataframe.groupby(['title', 'artist']).size().reset_index(name='count')
         top10 = song_counts.sort_values('count', ascending=False).head(10)
         top5_song = top10['title'].head(5).unique() #list of top 5 songs
-        top5_song = music[music['title'].isin(top5_song)]
-        monthly_song = top5_song.groupby(['title', 'month']).size().reset_index(name='listen_count')
+        top5_songs = music[music['title'].isin(top5_song)]
+        monthly_song = top5_songs.groupby(['title', 'month']).size().reset_index(name='listen_count')
 
         line = px.line(monthly_song, x="month", y="listen_count", color="title", title="Top 5 Songs Through the Year")
         line.update_layout(xaxis_title='Month of Year', yaxis_title='Listen Count')
@@ -230,11 +230,11 @@ def make_choiceline(dataframe, line_choice):
 
     elif line_choice == "Artists":
         #For line graph of top 5 artists over time
-        artist_counts = dataframe.groupby(['artist', 'artist']).size().reset_index(name='count')
+        artist_counts = dataframe.groupby('artist').size().reset_index(name='count')
         top10 = artist_counts.sort_values('count', ascending=False).head(10)
-        top5 = top10['artist'].head(5).unique()
-        top5 = dataframe[dataframe['artist'].isin(top5_art)]
-        monthly_counts = top5.groupby(['artist', 'month']).size().reset_index(name='listen_count')
+        top5_art = top10['artist'].head(5).unique()
+        top5_artists = dataframe[dataframe['artist'].isin(top5_art)]
+        monthly_counts = top5_artists.groupby(['artist', 'month']).size().reset_index(name='listen_count')
 
         line = px.line(monthly_counts, x="month", y="listen_count", color="artist", title="Top 5 Artists Through the Year")
         line.update_layout(xaxis_title='Month of Year', yaxis_title='Listen Count')
