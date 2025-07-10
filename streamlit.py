@@ -191,7 +191,7 @@ def make_facts(dataframe):
     topday_df = topday_df.groupby(['artist']).size().reset_index(name='listen_count').sort_values('listen_count', ascending=False)
     topday_artist = topday_df.head(1)['artist'].values[0]
     top_day = pd.to_datetime(top_day).strftime('%m-%d')
-    topday_text = f"You listened to {topday_count} songs on {top_day}! Big day for you. Big day for being a fan of {topday_artist" too it seems."
+    topday_text = f"You listened to {topday_count} songs on {top_day}! Big day for you. Big day for being a fan of {topday_artist} too it seems."
 
     #Most repeated song on one day
     repeat_counts = dataframe.groupby(['date','title']).size().reset_index(name='listen_count').sort_values('listen_count', ascending=False)
