@@ -311,7 +311,7 @@ def artist_info(dataframe, chosen_artist):
     favsongs = bigdog_music['title'].tolist()
 
     first_listen = bigdog['date'].min().strftime('%m-%d')
-    say= f"Love at first sight... On {first_listen}, precisely, for you and {chosen_artist} that is. \nSince then you've been a big fan of {", ".join((favsongs)[:2])} and {favsongs[2]}.
+    say= f"Love at first sight... On {first_listen}, precisely, for you and {chosen_artist} that is. \nSince then you've been a big fan of {", ".join((favsongs)[:2])} and {favsongs[2]}."
     st.text(say)
 
 if spotify_upload or youtube_upload or apple_upload:
