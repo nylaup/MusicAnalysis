@@ -306,6 +306,15 @@ def monthly_analysis(dataframe, months, subject):
         top5 = monthly_songs.sort_values('count', ascending=False).head(5)
         pie = px.pie(top5, values='count', names='artist', title="Top 5 Songs for Select Months")
         st.plotly_chart(pie)
+    
+def artist_info(dataframe, chosen_artist):
+    bigdog = music[music['artist']==chosen_artist]
+    bigdog_music = bigdog.groupby(['title']).size().reset_index(name='count').sort_values('count', ascending=False).head(3)
+    favsongs = bigdog_music['title'].tolist()
+
+    first_listen = bigdog['date'].min().strftime('%m-%d')
+    say=("Love at first sight. On", first_listen, "precisely for you and", chosen_artist, "that is. \n Since then you've been a big fan of", (", ".join((favsongs)[:2]))+ ", and", favsongs[2])
+    st.text(say)
 
 if spotify_upload or youtube_upload or apple_upload:
     spotify, youtube, apple = None, None, None
@@ -349,6 +358,11 @@ if spotify_upload or youtube_upload or apple_upload:
                 format_func=lambda x: month_options[x], default=[1])
             if selected_months:
                 monthly_analysis(music, selected_months, chosen_analysis)
+
+            st.header("Artist Info")
+            big10arts = music.groupby('artist').size().reset_index(name='listen_count').sort_values('listen_count', ascending=False).head(10)['artist']
+            select_artist = st.selectbox("Select Artist for Further Analysis", options=list(big10arts))
+            artist_info(dataframe, select_artist)
 
             st.header("Platform Analysis")
             make_platform(music, platforms)
