@@ -190,23 +190,23 @@ def make_facts(dataframe):
     topday_df = topday_df.groupby(['artist']).size().reset_index(name='listen_count').sort_values('listen_count', ascending=False)
     topday_artist = topday_df.head(1)['artist'].values[0]
     top_day = pd.to_datetime(top_day).strftime('%m-%d')
-    topday_text = ("You listened to", topday_count, "songs on", top_day+ "! Big day for you. Big day for being a fan of", topday_artist, "too it seems.")
+    topday_text = f"You listened to", topday_count, "songs on", top_day+ "! Big day for you. Big day for being a fan of", topday_artist, "too it seems."
 
     #Most repeated song on one day
     repeat_counts = dataframe.groupby(['date','title']).size().reset_index(name='listen_count').sort_values('listen_count', ascending=False)
     repeated_song = repeat_counts.head(1)['title'].values[0]
     repeated_day = pd.to_datetime(repeat_counts.head(1)['date'].values[0]).strftime('%m-%d')
     repeated_counts = repeat_counts.head(1)['listen_count'].values[0]
-    repeat_text = print("You listened to", repeated_song, repeated_counts, "times on", repeated_day+ ". A new record for you. It's that good?")
+    repeat_text = f"You listened to", repeated_song, repeated_counts, "times on", repeated_day+ ". A new record for you. It's that good?"
 
     #Number of unique songs listened to
     num_songs=repeat_counts.size
     if num_songs > 15921:
-        num_text = ("Wow! You listened to", num_songs, "songs this year. Better than me...")
+        num_text = f"Wow! You listened to", num_songs, "songs this year. Better than me..."
     elif num_songs < 15921:
-        num_text = ("Huh, you only listened to", num_songs, "songs... I could do better.")
+        num_text = f"Huh, you only listened to", num_songs, "songs... I could do better."
     else:
-        num_text = ("You listened to", num_songs, "songs. Samesies!")
+        num_text = f"You listened to", num_songs, "songs. Samesies!"
     
     st.text(num_text)
     st.text(topday_text)
@@ -299,9 +299,9 @@ def monthly_analysis(dataframe, months, subject):
         pie = px.pie(top5, values='count', names='artist', title="Top 5 Artists for Select Months")
         st.plotly_chart(pie)
     elif subject == "Songs":
-        monthly_songs = mdf.groupby(['artist']).size().reset_index(name='count')
+        monthly_songs = mdf.groupby(['title']).size().reset_index(name='count')
         top5 = monthly_songs.sort_values('count', ascending=False).head(5)
-        pie = px.pie(top5, values='count', names='artist', title="Top 5 Songs for Select Months")
+        pie = px.pie(top5, values='count', names='title', title="Top 5 Songs for Select Months")
         st.plotly_chart(pie)
     
 def artist_info(dataframe, chosen_artist):
@@ -359,7 +359,7 @@ if spotify_upload or youtube_upload or apple_upload:
             st.header("Artist Info")
             big10arts = music.groupby('artist').size().reset_index(name='listen_count').sort_values('listen_count', ascending=False).head(10)['artist']
             select_artist = st.selectbox("Select Artist for Further Analysis", options=list(big10arts))
-            artist_info(dataframe, select_artist)
+            artist_info(music, select_artist)
 
             st.header("Platform Analysis")
             make_platform(music, platforms)
