@@ -292,19 +292,19 @@ def make_platform(dataframe, platforms):
 
 def monthly_analysis(dataframe, months, subject):
     mdf = dataframe[dataframe['month'].isin(months)]
-    if subject == "Artists"
+    if subject == "Artists":
         monthly_artists = mdf.groupby(['artist']).size().reset_index(name='count')
         top5 = monthly_artists.sort_values('count', ascending=False).head(5)
         pie = px.pie(top5, values='count', names='artist', title="Top 5 Artists for Select Months")
         st.plotly_chart(pie)
-    elif subject == "Songs"
+    elif subject == "Songs":
         monthly_songs = mdf.groupby(['artist']).size().reset_index(name='count')
         top5 = monthly_songs.sort_values('count', ascending=False).head(5)
         pie = px.pie(top5, values='count', names='artist', title="Top 5 Songs for Select Months")
         st.plotly_chart(pie)
     
 def artist_info(dataframe, chosen_artist):
-    bigdog = music[music['artist']==chosen_artist]
+    bigdog = dataframe[dataframe['artist']==chosen_artist]
     bigdog_music = bigdog.groupby(['title']).size().reset_index(name='count').sort_values('count', ascending=False).head(3)
     favsongs = bigdog_music['title'].tolist()
 
