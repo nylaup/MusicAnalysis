@@ -182,9 +182,10 @@ def dataframe_merge(spotifydf, youtubedf, appledf, selected_platform):
 
 def make_facts(dataframe):
     #Biggest listening day and artist for that day 
+    dataframe['date'] = pd.to_datetime(dataframe['date'])
     daily_counts = dataframe.groupby(['date']).size().reset_index(name='listen_count').sort_values('listen_count', ascending=False)
-    top_day = pd.to_datetime(daily_counts.head(1)['date'].values[0])
-    topday_count = daily_counts.head(1)['listen_count'].values[0]
+    top_day = daily_counts.iloc[0]['date']
+    topday_count = daily_counts.iloc[0]['listen_count']
     topday_df = dataframe[dataframe['date']==top_day]
     topday_df = topday_df.groupby(['artist']).size().reset_index(name='listen_count').sort_values('listen_count', ascending=False)
     topday_artist = topday_df.head(1)['artist'].values[0]
