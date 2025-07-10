@@ -286,7 +286,7 @@ if spotify_upload or youtube_upload or apple_upload:
             make_topartists(music)
 
             st.header("Top 5 in the Year")
-            chosen_line = st.radio("Select what to see top 5 of:", options=["Artists", "Songs"], default=["Artists"])
+            chosen_line = st.radio("Select what to see top 5 of:", options=["Artists", "Songs"], index=0)
             if chosen_line:
                 make_choiceline(music, chosen_line)
 
