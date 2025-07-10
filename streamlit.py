@@ -16,7 +16,8 @@ with st.expander("Instructions"):
     st.markdown("""
     ##### Welcome to Listnd, an app that tells you about your listening history across music listening platforms!     
     If you use multiple streaming platforms and have always wanted to know, comprehensively, who is your top artist? 
-    Here is the place for you to find out!           
+    Here is the place for you to find out!       
+    If not, you can also see some fun graphs from just one app.     
     In order to do this however (works best on a computer), you do have to separately request your data
     from each platform you use... which can take a couple hours... stay with me here.             
     Fortunately here are convenient instructions for how to do so:        
@@ -190,23 +191,23 @@ def make_facts(dataframe):
     topday_df = topday_df.groupby(['artist']).size().reset_index(name='listen_count').sort_values('listen_count', ascending=False)
     topday_artist = topday_df.head(1)['artist'].values[0]
     top_day = pd.to_datetime(top_day).strftime('%m-%d')
-    topday_text = f"You listened to", topday_count, "songs on", top_day+ "! Big day for you. Big day for being a fan of", topday_artist, "too it seems."
+    topday_text = f"You listened to {topday_count} songs on {top_day}! Big day for you. Big day for being a fan of {topday_artist" too it seems."
 
     #Most repeated song on one day
     repeat_counts = dataframe.groupby(['date','title']).size().reset_index(name='listen_count').sort_values('listen_count', ascending=False)
     repeated_song = repeat_counts.head(1)['title'].values[0]
     repeated_day = pd.to_datetime(repeat_counts.head(1)['date'].values[0]).strftime('%m-%d')
     repeated_counts = repeat_counts.head(1)['listen_count'].values[0]
-    repeat_text = f"You listened to", repeated_song, repeated_counts, "times on", repeated_day+ ". A new record for you. It's that good?"
+    repeat_text = f"You listened to {repeated_song} {repeated_counts} times on {repeated_day}. A new record for you. It's that good?"
 
     #Number of unique songs listened to
     num_songs=repeat_counts.size
     if num_songs > 15921:
-        num_text = f"Wow! You listened to", num_songs, "songs this year. Better than me..."
+        num_text = f"Wow! You listened to {num_songs} songs. Better than me..."
     elif num_songs < 15921:
-        num_text = f"Huh, you only listened to", num_songs, "songs... I could do better."
+        num_text = f"Huh, you only listened to {num_songs} songs... I could do better."
     else:
-        num_text = f"You listened to", num_songs, "songs. Samesies!"
+        num_text = f"You listened to {num_songs} songs. Samesies!"
     
     st.text(num_text)
     st.text(topday_text)
@@ -310,7 +311,7 @@ def artist_info(dataframe, chosen_artist):
     favsongs = bigdog_music['title'].tolist()
 
     first_listen = bigdog['date'].min().strftime('%m-%d')
-    say=("Love at first sight. On", first_listen, "precisely for you and", chosen_artist, "that is. \n Since then you've been a big fan of", (", ".join((favsongs)[:2]))+ ", and", favsongs[2])
+    say= f"Love at first sight... On {first_listen}, precisely, for you and {chosen_artist} that is. \nSince then you've been a big fan of {", ".join((favsongs)[:2])} and {favsongs[2]}.
     st.text(say)
 
 if spotify_upload or youtube_upload or apple_upload:
