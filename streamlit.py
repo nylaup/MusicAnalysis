@@ -186,23 +186,21 @@ def dataframe_merge(spotifydf, youtubedf, appledf, selected_platform):
 
 def make_facts(dataframe):
     #Biggest listening day and artist for that day 
-    daily_counts = music.groupby(['date']).size().reset_index(name='listen_count').sort_values('listen_count', ascending=False)
+    daily_counts = dataframe.groupby(['date']).size().reset_index(name='listen_count').sort_values('listen_count', ascending=False)
     top_day = pd.to_datetime(daily_counts.head(1)['date'].values[0]).strftime('%Y-%m-%d')
     topday_count = daily_counts.head(1)['listen_count'].values[0]
-    topday_df = music[music['date']==top_day]
+    topday_df = dataframe[dataframe['date']==top_day]
     topday_df = topday_df.groupby(['artist']).size().reset_index(name='listen_count').sort_values('listen_count', ascending=False)
     topday_artist = topday_df.head(1)['artist'].values[0]
     top_day = pd.to_datetime(top_day).strftime('%m-%d')
     topday_text = ("You listened to", topday_count, "songs on", top_day+ "! Big day for you. Big day for being a fan of", topday_artist, "too it seems.")
-    st.text(topday_text)
 
     #Most repeated song on one day
-    repeat_counts = music.groupby(['date','title']).size().reset_index(name='listen_count').sort_values('listen_count', ascending=False)
+    repeat_counts = dataframe.groupby(['date','title']).size().reset_index(name='listen_count').sort_values('listen_count', ascending=False)
     repeated_song = repeat_counts.head(1)['title'].values[0]
     repeated_day = pd.to_datetime(repeat_counts.head(1)['date'].values[0]).strftime('%m-%d')
     repeated_counts = repeat_counts.head(1)['listen_count'].values[0]
     repeat_text = print("You listened to", repeated_song, repeated_counts, "times on", repeated_day+ ". A new record for you. It's that good?")
-    st.text(repeat_text)
 
     #Number of unique songs listened to
     num_songs=repeat_counts.size
@@ -212,9 +210,13 @@ def make_facts(dataframe):
         num_text = ("Huh, you only listened to", num_songs, "songs... I could do better.")
     else:
         num_text = ("You listened to", num_songs, "songs. Samesies!")
+    
     st.text(num_text)
+    st.text(topday_text)
+    st.text(repeat_text)
 
 def make_topsongs(dataframe):
+    #Barchart of top artists
     song_counts = dataframe.groupby(['title', 'artist']).size().reset_index(name='count')
     top10 = song_counts.sort_values('count', ascending=False).head(10)
 
@@ -223,8 +225,18 @@ def make_topsongs(dataframe):
              orientation="v", title="Top 10 Songs")
     fig.update_layout(
         xaxis=dict(categoryorder='array', categoryarray=top10['title'].tolist()), height=600)
-    
     st.plotly_chart(fig, use_container_width=True)
+
+    #Linegraph of top artists
+    song_counts = dataframe.groupby(['title', 'artist']).size().reset_index(name='count')
+    top10 = song_counts.sort_values('count', ascending=False).head(10)
+    top5_song = top10['title'].head(5).unique() #list of top 5 songs
+    top5_songs = dataframe[dataframe['title'].isin(top5_song)]
+    monthly_song = top5_songs.groupby(['title', 'month']).size().reset_index(name='listen_count')
+
+    line = px.line(monthly_song, x="month", y="listen_count", color="title", title="Top 5 Songs Through the Year")
+    line.update_layout(xaxis_title='Month of Year', yaxis_title='Listen Count')
+    st.plotly_chart(line)
 
 def make_topartists(dataframe):
     #For pie chart
@@ -246,29 +258,33 @@ def make_topartists(dataframe):
     bar.update_layout(xaxis_title='Hour of Day', yaxis_title='Listen Count')
     st.plotly_chart(bar)
 
-def make_choiceline(dataframe, line_choice):
-    if line_choice == "Songs":
-        song_counts = dataframe.groupby(['title', 'artist']).size().reset_index(name='count')
-        top10 = song_counts.sort_values('count', ascending=False).head(10)
-        top5_song = top10['title'].head(5).unique() #list of top 5 songs
-        top5_songs = music[music['title'].isin(top5_song)]
-        monthly_song = top5_songs.groupby(['title', 'month']).size().reset_index(name='listen_count')
+    #Barchart of top 3
+    monthly_counts = dataframe.groupby(['artist', 'month']).size().reset_index(name='listen_count')
+    top5_artists_overall = (monthly_counts.groupby('artist')['listen_count'].sum().sort_values(ascending=False)
+        .head(5).index.tolist())
+    color_palette = px.colors.qualitative.Plotly
+    custom_color_map = {artist: color_palette[i] for i, artist in enumerate(top5_artists_overall)}
+    top3_artists = pd.DataFrame()
+    for month in range(1,13):
+        df = monthly_counts[monthly_counts['month']==month]
+        df = df.sort_values('listen_count', ascending=False).head(3)
+        top3_artists = pd.concat([top3_artists, df])
+    top3_artists = top3_artists.sort_values(by=["month", "listen_count"], ascending=[True, False])
+    def generate_grayscale(n, start=200, end=80):
+        step = (start - end) // max(n - 1, 1)
+        return [f"#{v:02x}{v:02x}{v:02x}" for v in range(start, end - 1, -step)]
+    grayscale_colors = generate_grayscale(10) 
+    all_artists = top3_artists['artist'].unique()
+    non_top5_artists = [a for a in all_artists if a not in top5_artists_overall]
+    for i, artist in enumerate(non_top5_artists):
+        custom_color_map[artist] = grayscale_colors[i % len(grayscale_colors)]
 
-        line = px.line(monthly_song, x="month", y="listen_count", color="title", title="Top 5 Songs Through the Year")
-        line.update_layout(xaxis_title='Month of Year', yaxis_title='Listen Count')
-        st.plotly_chart(line)
-
-    elif line_choice == "Artists":
-        #For line graph of top 5 artists over time
-        artist_counts = dataframe.groupby('artist').size().reset_index(name='count')
-        top10 = artist_counts.sort_values('count', ascending=False).head(10)
-        top5_art = top10['artist'].head(5).unique()
-        top5_artists = dataframe[dataframe['artist'].isin(top5_art)]
-        monthly_counts = top5_artists.groupby(['artist', 'month']).size().reset_index(name='listen_count')
-
-        line = px.line(monthly_counts, x="month", y="listen_count", color="artist", title="Top 5 Artists Through the Year")
-        line.update_layout(xaxis_title='Month of Year', yaxis_title='Listen Count')
-        st.plotly_chart(line)
+    fig = px.bar(top3_artists, x="month", y="listen_count", color="artist", 
+             color_discrete_map=custom_color_map, barmode="stack", title="Top 3 artists per month")
+    for trace in fig.data: #Legend only has top5
+        if trace.name not in top5_artists_overall:
+            trace.showlegend = False
+    st.plotly_chart(fig)
 
 def make_platform(dataframe, platforms):
     if len(platforms) == 1:
@@ -278,12 +294,18 @@ def make_platform(dataframe, platforms):
     fig.update_layout(xaxis_title='date', yaxis_title='songs')
     st.plotly_chart(fig)
 
-def monthly_analysis(dataframe, months):
+def monthly_analysis(dataframe, months, subject):
     mdf = dataframe[dataframe['month'].isin(months)]
-    monthly_artists = mdf.groupby(['artist']).size().reset_index(name='count')
-    top5 = monthly_artists.sort_values('count', ascending=False).head(5)
-    pie = px.pie(top5, values='count', names='artist', title="Top 5 Artists for Select Months")
-    st.plotly_chart(pie)
+    if subject == "Artists"
+        monthly_artists = mdf.groupby(['artist']).size().reset_index(name='count')
+        top5 = monthly_artists.sort_values('count', ascending=False).head(5)
+        pie = px.pie(top5, values='count', names='artist', title="Top 5 Artists for Select Months")
+        st.plotly_chart(pie)
+    elif subject == "Songs"
+        monthly_songs = mdf.groupby(['artist']).size().reset_index(name='count')
+        top5 = monthly_songs.sort_values('count', ascending=False).head(5)
+        pie = px.pie(top5, values='count', names='artist', title="Top 5 Songs for Select Months")
+        st.plotly_chart(pie)
 
 if spotify_upload or youtube_upload or apple_upload:
     spotify, youtube, apple = None, None, None
@@ -317,19 +339,16 @@ if spotify_upload or youtube_upload or apple_upload:
             st.header("Top Artists")
             make_topartists(music)
 
-            st.header("Top 5 in the Year")
-            chosen_line = st.radio("Select what to see top 5 of:", options=["Artists", "Songs"], index=0)
-            make_choiceline(music, chosen_line)
-
             st.header("Listening Facts")
             make_facts(music)
 
             st.header("Monthly Analysis")
+            chosen_analysis = st.radio("Select what you want a deeper dive on:", options=["Artists", "Songs"], index=0)
             month_options={i:month for i, month in enumerate(calendar.month_name) if month}
             selected_months = st.multiselect("Select Months for Further Analysis", options=list(month_options.keys()),
                 format_func=lambda x: month_options[x], default=[1])
             if selected_months:
-                monthly_analysis(music, selected_months)
+                monthly_analysis(music, selected_months, chosen_analysis)
 
             st.header("Platform Analysis")
             make_platform(music, platforms)
