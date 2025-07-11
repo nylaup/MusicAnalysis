@@ -19,7 +19,7 @@ with st.expander("Instructions"):
     Here is the place for you to find out!       
     If not, you can also see some fun graphs from just one app.     
     In order to do this however (works best on a computer), you do have to separately request your data
-    from each platform you use... which can take a couple hours... stay with me here.             
+    from each platform you use... which can take a couple days... stay with me here.             
     Fortunately here are convenient instructions for how to do so:        
 
     ### Spotify
@@ -155,7 +155,7 @@ def clean_apple(apple, year):
     apple['hour'] = apple['Event End Timestamp'].dt.hour
     apple['year'] = apple['Event End Timestamp'].dt.year
     apple = apple[apple['year'].isin(year)] #only data from selected year
-    apple.rename(columns={'Artist Name': 'artist', 'Content Name': 'title'}, inplace=True) #rename columns
+    apple.rename(columns={'Artist Name': 'artist', 'Content Name': 'title', 'End Position In Milliseconds':'msPlayed'}, inplace=True) #rename columns
 
     return apple
 
@@ -163,17 +163,18 @@ def dataframe_merge(spotifydf, youtubedf, appledf, selected_platform):
     df = []
 
     if 'spotify' in selected_platform:
-        spotify2 = spotifydf[['artist', 'title', 'date', 'hour', 'month']] #Take only select columns
+        spotify2 = spotifydf[['artist', 'title', 'date', 'hour', 'month', 'msPlayed']] #Take only select columns
         spotify2['platform'] = 'spotify'
         df.append(spotify2)
 
     if 'youtube' in selected_platform:
         youtube2 = youtubedf[['artist', 'title', 'date', 'hour', 'month']]
+        youtube2['msPlayed'] = None
         youtube2['platform'] = 'youtube'
         df.append(youtube2)
 
     if 'apple' in selected_platform:
-        apple2 = appledf[['artist', 'title', 'date', 'hour', 'month']]
+        apple2 = appledf[['artist', 'title', 'date', 'hour', 'month', 'msPlayed']]
         apple2['platform'] = 'apple'
         df.append(apple2)
 
@@ -181,7 +182,7 @@ def dataframe_merge(spotifydf, youtubedf, appledf, selected_platform):
         music = pd.concat(df, ignore_index=True)
         return music
 
-def make_facts(dataframe):
+def make_facts(dataframe, platforms):
     #Biggest listening day and artist for that day 
     dataframe['date'] = pd.to_datetime(dataframe['date'])
     daily_counts = dataframe.groupby(['date']).size().reset_index(name='listen_count').sort_values('listen_count', ascending=False)
@@ -189,15 +190,15 @@ def make_facts(dataframe):
     topday_count = daily_counts.iloc[0]['listen_count']
     topday_df = dataframe[dataframe['date']==top_day]
     topday_df = topday_df.groupby(['artist']).size().reset_index(name='listen_count').sort_values('listen_count', ascending=False)
-    topday_artist = topday_df.head(1)['artist'].values[0]
+    topday_artist = topday_df.iloc[0]['artist']
     top_day = pd.to_datetime(top_day).strftime('%m-%d')
     topday_text = f"You listened to {topday_count} songs on {top_day}! Big day for you. Big day for being a fan of {topday_artist} too it seems."
 
     #Most repeated song on one day
     repeat_counts = dataframe.groupby(['date','title']).size().reset_index(name='listen_count').sort_values('listen_count', ascending=False)
-    repeated_song = repeat_counts.head(1)['title'].values[0]
-    repeated_day = pd.to_datetime(repeat_counts.head(1)['date'].values[0]).strftime('%m-%d')
-    repeated_counts = repeat_counts.head(1)['listen_count'].values[0]
+    repeated_song = repeat_counts.iloc[0]['title']
+    repeated_day = pd.to_datetime(repeat_counts.iloc[0]['date']).strftime('%m-%d')
+    repeated_counts = repeat_counts.iloc[0]['listen_count']
     repeat_text = f"You listened to {repeated_song} {repeated_counts} times on {repeated_day}. A new record for you. It's that good?"
 
     #Number of unique songs listened to
@@ -208,10 +209,38 @@ def make_facts(dataframe):
         num_text = f"Huh, you only listened to {num_songs} songs... I could do better."
     else:
         num_text = f"You listened to {num_songs} songs. Samesies!"
-    
+
+    #Compare listening by minutes
+    if all(p == "youtube" for p in platforms): #cant do this with just youtube
+        minutes_text = ":)" 
+    else:
+        disc=""
+        if ("youtube" in platforms): #disclaimer if user uses youtube
+            disc = "(Youtube Music does not give time listened, so this is your music minus Youtube!) \n"
+        music2 = dataframe.dropna() #drop values with no time
+        mostminutes = music2.groupby('artist')['msPlayed'].sum().reset_index().sort_values('msPlayed', ascending=False)
+        mostminutes['hours'] = mostminutes['msPlayed'] / 3600000 #get hours
+        topmins = mostminutes.head(5)['artist'].tolist() #get top 5 most minutes
+        topsongs = music2.groupby(['artist']).size().reset_index(name='listen_count').sort_values('listen_count', ascending=False).head(5)
+        topsongs = topsongs['artist'].tolist()
+        if (sorted(topsongs) == sorted(topmins)):
+            text1 = "the same artists"
+            if (topsongs==topmins):
+                text2 = "and in the same order!"
+            else:
+                text2 = " but not in the same order."
+        else:
+            text1= "different artists"
+            text2= ", interesting"
+
+        minutes_text =(f"{disc} Dang! {round(mostminutes.iloc[0]['hours'], 1)} hours of {mostminutes.iloc[0]['artist']}. Moving on... \n" 
+                f"If we look at listening based on minutes, your top artists are {', '.join(topmins)}.\n" 
+                f"Which is interesting when compared to top artists by song. You've got {text1} {text2}")
+
     st.text(num_text)
     st.text(topday_text)
     st.text(repeat_text)
+    st.text(minutes_text)
 
 def make_topsongs(dataframe):
     #Barchart of top artists
@@ -348,7 +377,7 @@ if spotify_upload or youtube_upload or apple_upload:
             make_topartists(music)
 
             st.header("Listening Facts")
-            make_facts(music)
+            make_facts(music, platforms)
 
             st.header("Monthly Analysis")
             chosen_analysis = st.radio("Select what you want a deeper dive on:", options=["Artists", "Songs"], index=0)
