@@ -37,7 +37,7 @@ with st.expander("Instructions"):
     Once you get the email confirming your data is ready to download, download it. You may have to unzip this file.       
     To find the file we need: Takeout / YouTube and YouTube Music / history / watch-history.json      
     Upload this file to the site in the YouTube Music section.    
-    (Disclaimer: the way YouTube stores data is slighly strange so this may not be completely accurate )          
+    (Disclaimer: the way YouTube stores data is slighly strange so this may not be completely accurate. It also doesn't give minutes listened)          
 
     ### Apple Music      
     Go to your Apple account > Privacy > Your Data > Manage your data > Get a copy of your data        
@@ -273,17 +273,9 @@ def make_topartists(dataframe):
     top_artist = artist_freq.sort_values('count', ascending=False)
     artist10 = top_artist.head(10)
 
-    #For line graph of top 5 artists over time
-    top5_art = top_artist['artist'].head(5).unique() #list of top 5 artists
-    top5 = dataframe[dataframe['artist'].isin(top5_art)]
-    monthly_counts = top5.groupby(['artist', 'month']).size().reset_index(name='listen_count')
-
     pie = px.pie(artist10, values='count', names='artist', title="Top 10 Artists")
     st.plotly_chart(pie)
     
-    bar = px.histogram(top5, x='hour', color='artist', nbins=24, barmode='stack', title='Top 5 Artists Through the Day')
-    bar.update_layout(xaxis_title='Hour of Day', yaxis_title='Listen Count')
-    st.plotly_chart(bar)
 
     #Barchart of top 3
     monthly_counts = dataframe.groupby(['artist', 'month']).size().reset_index(name='listen_count')
@@ -344,6 +336,18 @@ def artist_info(dataframe, chosen_artist):
     say= f"Love at first sight... On {first_listen}, precisely, for you and {chosen_artist} that is. \nSince then you've been a big fan of {", ".join((favsongs)[:2])}, and {favsongs[2]}."
     st.text(say)
 
+def make_hours(dataframe, platforms):
+    if all(p == "youtube" for p in platforms): #cant do this with just youtube
+        st.text("Come back with another platform if you want time data ^-^")
+    else:
+        music2 = dataframe.dropna()
+        hours = music2.groupby('hour')['msPlayed'].sum().reset_index()
+        hours["hour"] = pd.to_numeric(hours["hour"])
+        hours["msPlayed"] = pd.to_numeric(hours["msPlayed"]) / (1000 * 60)
+        fig = px.bar(hours, x='hour',y="msPlayed",title='Hourly Listening Distribution')
+        fig.update_layout(yaxis_title='Minutes Played')
+        st.plotly_chart(fig)
+
 if spotify_upload or youtube_upload or apple_upload:
     spotify, youtube, apple = None, None, None
 
@@ -378,6 +382,9 @@ if spotify_upload or youtube_upload or apple_upload:
 
             st.header("Listening Facts")
             make_facts(music, platforms)
+
+            st.header("Hourly Analysis")
+            make_hours(music, platforms)
 
             st.header("Monthly Analysis")
             chosen_analysis = st.radio("Select what you want a deeper dive on:", options=["Artists", "Songs"], index=0)
