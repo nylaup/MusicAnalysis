@@ -72,7 +72,8 @@ def clean_spotify(spotify, year):
     spotify['endTime'] = pd.to_datetime(spotify['endTime']) 
     spotify['date'] = spotify['endTime'].dt.date
     spotify['month'] = spotify['endTime'].dt.month
-    spotify['hour'] = spotify['endTime'].dt.hour
+    spotify['hour'] = spotify['endTime'].dt.strftime('%I %p')  
+    spotify['hour'] = spotify['hour'].str.lstrip('0')
     spotify['year'] = spotify['endTime'].dt.year
     spotify = spotify[spotify['year'].isin(year)] #only data from selected years
     spotify.rename(columns={'artistName': 'artist', 'trackName': 'title'}, inplace=True) #rename columns
@@ -86,7 +87,8 @@ def clean_youtube(youtube, year):
     youtube['ListTime'] = pd.to_datetime(youtube['time'], errors='coerce', utc=True)
     youtube['date'] = youtube['ListTime'].dt.date
     youtube['month'] = youtube['ListTime'].dt.month
-    youtube['hour'] = youtube['ListTime'].dt.hour
+    youtube['hour'] = youtube['ListTime'].dt.strftime('%I %p') 
+    youtube['hour'] = youtube['hour'].str.lstrip('0')
     youtube['year'] = youtube['ListTime'].dt.year
     youtube = youtube[youtube['year'].isin(year)] #only take data from selected year
 
@@ -152,7 +154,8 @@ def clean_apple(apple, year):
     apple['Event End Timestamp'] = pd.to_datetime(apple['Event End Timestamp']) 
     apple['date'] = apple['Event End Timestamp'].dt.date
     apple['month'] = apple['Event End Timestamp'].dt.month
-    apple['hour'] = apple['Event End Timestamp'].dt.hour
+    apple['hour'] = apple['Event End Timestamp'].dt.strftime('%I %p') 
+    apple['hour'] = apple['hour'].str.lstrip('0')
     apple['year'] = apple['Event End Timestamp'].dt.year
     apple = apple[apple['year'].isin(year)] #only data from selected year
     apple.rename(columns={'Artist Name': 'artist', 'Content Name': 'title', 'End Position In Milliseconds':'msPlayed'}, inplace=True) #rename columns
@@ -336,17 +339,14 @@ def artist_info(dataframe, chosen_artist):
     say= f"Love at first sight... On {first_listen}, precisely, for you and {chosen_artist} that is. \nSince then you've been a big fan of {", ".join((favsongs)[:2])}, and {favsongs[2]}."
     st.text(say)
 
-def make_hours(dataframe, platforms):
-    if all(p == "youtube" for p in platforms): #cant do this with just youtube
-        st.text("Come back with another platform if you want time data ^-^")
-    else:
-        music2 = dataframe.dropna()
-        hours = music2.groupby('hour')['msPlayed'].sum().reset_index()
-        hours["hour"] = pd.to_numeric(hours["hour"])
-        hours["msPlayed"] = pd.to_numeric(hours["msPlayed"]) / (1000 * 60)
-        fig = px.bar(hours, x='hour',y="msPlayed",title='Hourly Listening Distribution')
-        fig.update_layout(yaxis_title='Minutes Played')
-        st.plotly_chart(fig)
+def make_hours(dataframe):
+    dataframe['day_name'] = dataframe['date'].dt.day_name()
+    day_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+    hour_order = ['12 AM', '1 AM', '2 AM', '3 AM', '4 AM', '5 AM','6 AM', '7 AM', '8 AM', '9 AM', '10 AM', '11 AM',
+        '12 PM', '1 PM', '2 PM', '3 PM', '4 PM', '5 PM','6 PM', '7 PM', '8 PM', '9 PM', '10 PM', '11 PM']
+    fig = px.density_heatmap(dataframe, x='hour', y='day_name', category_orders={'day_name':day_order, 'hour':hour_order}, title="Music Listening Through the Week")
+    fig.update_layout(yaxis_title="Day of the Week", xaxis_title="Hour")
+    st.plotly_chart(fig)
 
 if spotify_upload or youtube_upload or apple_upload:
     spotify, youtube, apple = None, None, None
@@ -384,7 +384,7 @@ if spotify_upload or youtube_upload or apple_upload:
             make_facts(music, platforms)
 
             st.header("Hourly Analysis")
-            make_hours(music, platforms)
+            make_hours(music)
 
             st.header("Monthly Analysis")
             chosen_analysis = st.radio("Select what you want a deeper dive on:", options=["Artists", "Songs"], index=0)
