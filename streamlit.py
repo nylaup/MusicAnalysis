@@ -49,13 +49,13 @@ with st.expander("Instructions"):
     """)
 
 st.markdown("#### Upload Spotify File")
-spotify_upload = st.file_uploader("StreamingHistory_music_0", type=["json"])
+spotify_upload = st.file_uploader("StreamingHistory_music_0", type=["json"], accept_multiple_files=True)
 
 st.markdown("#### Upload YouTube Music File")
-youtube_upload = st.file_uploader("watch-history", type=["json"])
+youtube_upload = st.file_uploader("watch-history", type=["json"], accept_multiple_files=True)
 
 st.markdown("#### Upload Apple Music File")
-apple_upload = st.file_uploader("Apple Music Play Activity", type=["csv"])
+apple_upload = st.file_uploader("Apple Music Play Activity", type=["csv"], accept_multiple_files=True)
 
 year = st.multiselect("Select Year", [2023, 2024, 2025], default=[2024])
 
