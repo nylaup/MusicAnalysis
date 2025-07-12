@@ -353,19 +353,25 @@ if spotify_upload or youtube_upload or apple_upload:
 
     platform_options = []
     if spotify_upload:
-        spotify = parse_json(spotify_upload)
-        spotify = clean_spotify(spotify, year=year)
-        platform_options.append('spotify') 
+        for file in spotify_upload:
+            spotify = parse_json(spotify_upload)
+            if spotify is not None:
+                spotify = clean_spotify(spotify, year=year)
+                platform_options.append('spotify') 
 
     if youtube_upload:
-        youtube = parse_json(youtube_upload)
-        youtube = clean_youtube(youtube, year=year)
-        platform_options.append('youtube')
+        for file in youtube_upload:
+            youtube = parse_json(youtube_upload)
+            if spotify is not None:
+                youtube = clean_youtube(youtube, year=year)
+                platform_options.append('youtube')
 
     if apple_upload:
-        apple = parse_csv(apple_upload)
-        apple = clean_apple(apple, year=year)
-        platform_options.append('apple')
+        for file in apple_upload:
+            apple = parse_csv(apple_upload)
+            if spotify is not None:
+                apple = clean_apple(apple, year=year)
+                platform_options.append('apple')
 
     platforms = st.multiselect("Select Platforms:", options=platform_options, default=platform_options)
 
