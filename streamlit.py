@@ -354,21 +354,21 @@ if spotify_upload or youtube_upload or apple_upload:
     platform_options = []
     if spotify_upload:
         for file in spotify_upload:
-            spotify = parse_json(spotify_upload)
+            spotify = parse_json(file)
             if spotify is not None:
                 spotify = clean_spotify(spotify, year=year)
                 platform_options.append('spotify') 
 
     if youtube_upload:
         for file in youtube_upload:
-            youtube = parse_json(youtube_upload)
+            youtube = parse_json(file)
             if spotify is not None:
                 youtube = clean_youtube(youtube, year=year)
                 platform_options.append('youtube')
 
     if apple_upload:
         for file in apple_upload:
-            apple = parse_csv(apple_upload)
+            apple = parse_csv(file)
             if spotify is not None:
                 apple = clean_apple(apple, year=year)
                 platform_options.append('apple')
