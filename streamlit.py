@@ -263,7 +263,7 @@ def make_topsongs(dataframe):
     top10 = song_counts.sort_values('count', ascending=False).head(10)
     top5_song = top10['title'].head(5).unique() #list of top 5 songs
     top5_songs = dataframe[dataframe['title'].isin(top5_song)]
-    monthly_song = top5_songs.groupby(['title', 'month']).size().reset_index(name='listen_count')
+    monthly_song = top5_songs.groupby(['title', 'yearMonth']).size().reset_index(name='listen_count')
 
     line = px.line(monthly_song, x="yearMonth", y="listen_count", color="title", title="Top 5 Songs Through the Year")
     line.update_layout(xaxis_title='Month of Year', yaxis_title='Listen Count')
