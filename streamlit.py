@@ -57,7 +57,6 @@ youtube_upload = st.file_uploader("watch-history", type=["json"], accept_multipl
 st.markdown("#### Upload Apple Music File")
 apple_upload = st.file_uploader("Apple Music Play Activity", type=["csv"], accept_multiple_files=True)
 
-year = st.multiselect("Select Year", [2023, 2024, 2025], default=[2024])
 
 def parse_json(contents):
     stringio = StringIO(contents.getvalue().decode("utf-8"))
@@ -390,7 +389,9 @@ if spotify_upload or youtube_upload or apple_upload:
 
     if platforms:
         music = dataframe_merge(spotify, youtube, apple, platforms)
-    
+        year_options = sorted(music['date'].dt.year.unique())
+        year = st.multiselect("Select Year", year_options, default=year_options)
+
         if music.empty:
             st.warning("No data found after filtering.")
         if not music.empty:
