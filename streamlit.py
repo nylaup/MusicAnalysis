@@ -73,7 +73,7 @@ def clean_spotify(spotify, year):
     spotify['date'] = spotify['endTime'].dt.date
     spotify['month'] = spotify['endTime'].dt.month
     spotify['hour'] = spotify['endTime'].dt.strftime('%I %p')  
-    spotify['year_month'] = spotify['date']
+    spotify['yearMonth'] = spotify['date'].dt.to_period('M').dt.to_timestamp()
     spotify['hour'] = spotify['hour'].str.lstrip('0')
     spotify['year'] = spotify['endTime'].dt.year
     spotify = spotify[spotify['year'].isin(year)] #only data from selected years
@@ -167,18 +167,18 @@ def dataframe_merge(spotifydf, youtubedf, appledf, selected_platform):
     df = []
 
     if 'spotify' in selected_platform:
-        spotify2 = spotifydf[['artist', 'title', 'date', 'hour', 'month', 'msPlayed']] #Take only select columns
+        spotify2 = spotifydf[['artist', 'title', 'date', 'hour', 'month', 'yearMonth', 'msPlayed']] #Take only select columns
         spotify2['platform'] = 'spotify'
         df.append(spotify2)
 
     if 'youtube' in selected_platform:
-        youtube2 = youtubedf[['artist', 'title', 'date', 'hour', 'month']]
+        youtube2 = youtubedf[['artist', 'title', 'date', 'hour', 'month', 'yearMonth']]
         youtube2['msPlayed'] = None
         youtube2['platform'] = 'youtube'
         df.append(youtube2)
 
     if 'apple' in selected_platform:
-        apple2 = appledf[['artist', 'title', 'date', 'hour', 'month', 'msPlayed']]
+        apple2 = appledf[['artist', 'title', 'date', 'hour', 'month', 'yearMonth', 'msPlayed']]
         apple2['platform'] = 'apple'
         df.append(apple2)
 
@@ -265,7 +265,7 @@ def make_topsongs(dataframe):
     top5_songs = dataframe[dataframe['title'].isin(top5_song)]
     monthly_song = top5_songs.groupby(['title', 'month']).size().reset_index(name='listen_count')
 
-    line = px.line(monthly_song, x="year_month", y="listen_count", color="title", title="Top 5 Songs Through the Year")
+    line = px.line(monthly_song, x="yearMonth", y="listen_count", color="title", title="Top 5 Songs Through the Year")
     line.update_layout(xaxis_title='Month of Year', yaxis_title='Listen Count')
     st.plotly_chart(line)
 
@@ -282,17 +282,17 @@ def make_topartists(dataframe):
     
 
     #Barchart of top 3
-    monthly_counts = dataframe.groupby(['artist', 'year_month']).size().reset_index(name='listen_count')
+    monthly_counts = dataframe.groupby(['artist', 'yearMonth']).size().reset_index(name='listen_count')
     top5_artists_overall = (monthly_counts.groupby('artist')['listen_count'].sum().sort_values(ascending=False)
         .head(5).index.tolist())
     color_palette = px.colors.qualitative.Plotly
     custom_color_map = {artist: color_palette[i] for i, artist in enumerate(top5_artists_overall)}
     top3_artists = pd.DataFrame()
-    for month in monthly_counts['year_month'].sort_values().unique():
-        df = monthly_counts[monthly_counts['year_month']==month]
+    for month in monthly_counts['yearMonth'].sort_values().unique():
+        df = monthly_counts[monthly_counts['yearMonth']==month]
         df = df.sort_values('listen_count', ascending=False).head(3)
         top3_artists = pd.concat([top3_artists, df])
-    top3_artists = top3_artists.sort_values(by=["year_month", "listen_count"], ascending=[True, False])
+    top3_artists = top3_artists.sort_values(by=["yearMonth", "listen_count"], ascending=[True, False])
     def generate_grayscale(n, start=200, end=80):
         step = (start - end) // max(n - 1, 1)
         return [f"#{v:02x}{v:02x}{v:02x}" for v in range(start, end - 1, -step)]
@@ -302,7 +302,7 @@ def make_topartists(dataframe):
     for i, artist in enumerate(non_top5_artists):
         custom_color_map[artist] = grayscale_colors[i % len(grayscale_colors)]
 
-    fig = px.bar(top3_artists, x="year_month", y="listen_count", color="artist", 
+    fig = px.bar(top3_artists, x="yearMonth", y="listen_count", color="artist", 
              color_discrete_map=custom_color_map, barmode="stack", title="Top 3 artists per month")
     for trace in fig.data: #Legend only has top5
         if trace.name not in top5_artists_overall:
