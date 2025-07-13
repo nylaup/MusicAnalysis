@@ -163,18 +163,18 @@ def dataframe_merge(spotifydf, youtubedf, appledf, selected_platform):
     df = []
 
     if 'spotify' in selected_platform:
-        spotify2 = spotifydf[['artist', 'title', 'date', 'hour', 'month', 'yearMonth', 'msPlayed']] #Take only select columns
+        spotify2 = spotifydf[['artist', 'title', 'date', 'hour', 'month', 'yearMonth','year','msPlayed']] #Take only select columns
         spotify2['platform'] = 'spotify'
         df.append(spotify2)
 
     if 'youtube' in selected_platform:
-        youtube2 = youtubedf[['artist', 'title', 'date', 'hour', 'month', 'yearMonth']]
+        youtube2 = youtubedf[['artist', 'title', 'date', 'hour', 'month','year', 'yearMonth']]
         youtube2['msPlayed'] = None
         youtube2['platform'] = 'youtube'
         df.append(youtube2)
 
     if 'apple' in selected_platform:
-        apple2 = appledf[['artist', 'title', 'date', 'hour', 'month', 'yearMonth', 'msPlayed']]
+        apple2 = appledf[['artist', 'title', 'date', 'hour', 'month', 'yearMonth','year', 'msPlayed']]
         apple2['platform'] = 'apple'
         df.append(apple2)
 
@@ -386,7 +386,7 @@ if spotify_upload or youtube_upload or apple_upload:
 
     if platforms:
         music = dataframe_merge(spotify, youtube, apple, platforms)
-        year_options = sorted(music['date'].dt.year.unique())
+        year_options = sorted(music['year'].unique())
         year = st.multiselect("Select Year", year_options, default=year_options)
 
         music = music[music['year'].isin(year)] #only data from selected years
