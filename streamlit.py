@@ -73,7 +73,7 @@ def clean_spotify(spotify, year):
     spotify['date'] = spotify['endTime'].dt.date
     spotify['month'] = spotify['endTime'].dt.month
     spotify['hour'] = spotify['endTime'].dt.strftime('%I %p')  
-    spotify['yearMonth'] = spotify['date'].dt.to_period('M').dt.to_timestamp()
+    spotify['yearMonth'] = spotify['endTime'].dt.to_period('M').dt.to_timestamp()
     spotify['hour'] = spotify['hour'].str.lstrip('0')
     spotify['year'] = spotify['endTime'].dt.year
     spotify = spotify[spotify['year'].isin(year)] #only data from selected years
