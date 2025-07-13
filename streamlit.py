@@ -75,7 +75,6 @@ def clean_spotify(spotify, year):
     spotify['yearMonth'] = spotify['endTime'].dt.to_period('M').dt.to_timestamp()
     spotify['hour'] = spotify['hour'].str.lstrip('0')
     spotify['year'] = spotify['endTime'].dt.year
-    spotify = spotify[spotify['year'].isin(year)] #only data from selected years
     spotify.rename(columns={'artistName': 'artist', 'trackName': 'title'}, inplace=True) #rename columns
     return spotify
 
@@ -90,7 +89,6 @@ def clean_youtube(youtube, year):
     youtube['hour'] = youtube['ListTime'].dt.strftime('%I %p') 
     youtube['hour'] = youtube['hour'].str.lstrip('0')
     youtube['year'] = youtube['ListTime'].dt.year
-    youtube = youtube[youtube['year'].isin(year)] #only take data from selected year
 
     #Clean Youtube Song Titles
     def delete_watched(value): #Eliminate 'Watched' from song titles
@@ -157,7 +155,6 @@ def clean_apple(apple, year):
     apple['hour'] = apple['Event End Timestamp'].dt.strftime('%I %p') 
     apple['hour'] = apple['hour'].str.lstrip('0')
     apple['year'] = apple['Event End Timestamp'].dt.year
-    apple = apple[apple['year'].isin(year)] #only data from selected year
     apple.rename(columns={'Artist Name': 'artist', 'Content Name': 'title', 'End Position In Milliseconds':'msPlayed'}, inplace=True) #rename columns
 
     return apple
@@ -392,6 +389,7 @@ if spotify_upload or youtube_upload or apple_upload:
         year_options = sorted(music['date'].dt.year.unique())
         year = st.multiselect("Select Year", year_options, default=year_options)
 
+        music = music[music['year'].isin(year)] #only data from selected years
         if music.empty:
             st.warning("No data found after filtering.")
         if not music.empty:
