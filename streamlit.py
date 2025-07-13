@@ -66,7 +66,7 @@ def parse_csv(contents):
     return pd.read_csv(contents)
 
 
-def clean_spotify(spotify, year): 
+def clean_spotify(spotify): 
     #Convert spotify endTime to datetime
     spotify['endTime'] = pd.to_datetime(spotify['endTime']) 
     spotify['date'] = spotify['endTime'].dt.date
@@ -78,7 +78,7 @@ def clean_spotify(spotify, year):
     spotify.rename(columns={'artistName': 'artist', 'trackName': 'title'}, inplace=True) #rename columns
     return spotify
 
-def clean_youtube(youtube, year):
+def clean_youtube(youtube):
     #Clean Youtube
     youtube = youtube[youtube['header']=='YouTube Music'] #only take data from youtube music 
     youtube = youtube.drop(['titleUrl', 'products', 'activityControls', 'description', 'details', 'header'], axis=1)
@@ -146,7 +146,7 @@ def clean_youtube(youtube, year):
 
     return youtube
 
-def clean_apple(apple, year):
+def clean_apple(apple):
     apple = apple[apple['Content Specific Type']=='Song'] #only take data of songs
     #Convert apple endTime to datetime
     apple['Event End Timestamp'] = pd.to_datetime(apple['Event End Timestamp']) 
@@ -357,7 +357,7 @@ if spotify_upload or youtube_upload or apple_upload:
                 spotifydfs.append(parsed)
         if spotifydfs:
             spotify = pd.concat(spotifydfs, ignore_index=True)
-            spotify = clean_spotify(spotify, year=year)
+            spotify = clean_spotify(spotify)
             platform_options.append('spotify') 
 
     if youtube_upload:
@@ -368,7 +368,7 @@ if spotify_upload or youtube_upload or apple_upload:
                 youtubedfs.append(parsed)
         if youtubedfs:
             youtube = pd.concat(youtubedfs, ignore_index=True)
-            youtube = clean_youtube(youtube, year=year)
+            youtube = clean_youtube(youtube)
             platform_options.append('youtube')
 
     if apple_upload:
@@ -379,7 +379,7 @@ if spotify_upload or youtube_upload or apple_upload:
                 appledfs.append(parsed)
         if appledfs:
             apple = pd.concat(appledfs, ignore_index=True)
-            apple = clean_apple(apple, year=year)
+            apple = clean_apple(apple)
             platform_options.append('apple')
 
     platforms = st.multiselect("Select Platforms:", options=platform_options, default=platform_options)
