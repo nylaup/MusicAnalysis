@@ -352,7 +352,7 @@ def make_hours(dataframe):
     fig.update_layout(yaxis_title="Day of the Week", xaxis_title="Hour")
     st.plotly_chart(fig)
 
-if spotify_upload or youtube_upload or apple_upload:
+if spotify_upload or youtube_upload or apple_history_upload:
     spotify, youtube, apple = None, None, None
 
     platform_options = []
