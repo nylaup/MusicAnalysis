@@ -164,6 +164,7 @@ def clean_apple(history, songs):
     history.rename(columns={'Song Name': 'title', 'Media Duration In Milliseconds': 'msPlayed'}, inplace=True)
 
     apple = pd.merge(history, songs, on='title', how='left')
+    apple['artist'] = apple['artist'].fillna('Unknown')
     return apple
 
 def dataframe_merge(spotifydf, youtubedf, appledf, selected_platform):
