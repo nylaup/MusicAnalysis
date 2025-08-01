@@ -43,9 +43,8 @@ with st.expander("Instructions"):
     Go to your Apple account > Privacy > Your Data > Manage your data > Get a copy of your data        
     Then select the checkbox for Apple Media Services Information, Continue, then Complete Request.  
     Wait until your data file is ready, then download this file. You may have to unzip this file.      
-    To find the file we need: Apple_Media_Services.zip / Apple Music Activity / Apple Music Play Activity.csv     
-    Upload this file to the site in the Apple Music section.     
-    (I think this should work?)    
+    To find the files we need: Apple_Media_Services.zip / Apple Music Activity / Apple Music Play Activity.csv AND Apple Music - Track Play History.csv    
+    Upload these TWO files to the site in the Apple Music section.      
     """)
 
 st.markdown("#### Upload Spotify File")
@@ -55,8 +54,8 @@ st.markdown("#### Upload YouTube Music File")
 youtube_upload = st.file_uploader("watch-history", type=["json"], accept_multiple_files=True)
 
 st.markdown("#### Upload Apple Music File")
-apple_upload = st.file_uploader("Apple Music Play Activity", type=["csv"], accept_multiple_files=True)
-
+apple_history_upload = st.file_uploader("Apple Music Play Activity", type=["csv"], accept_multiple_files=True)
+apple_songs_upload = st.file_uploader("Apple Music - Track Play History", type=["csv"], accept_multiple_files=True)
 
 def parse_json(contents):
     stringio = StringIO(contents.getvalue().decode("utf-8"))
@@ -146,17 +145,25 @@ def clean_youtube(youtube):
 
     return youtube
 
-def clean_apple(apple):
-    apple = apple[apple['Content Specific Type']=='Song'] #only take data of songs
-    #Convert apple endTime to datetime
-    apple['Event End Timestamp'] = pd.to_datetime(apple['Event End Timestamp']) 
-    apple['date'] = apple['Event End Timestamp'].dt.date
-    apple['month'] = apple['Event End Timestamp'].dt.month
-    apple['hour'] = apple['Event End Timestamp'].dt.strftime('%I %p') 
-    apple['hour'] = apple['hour'].str.lstrip('0')
-    apple['year'] = apple['Event End Timestamp'].dt.year
-    apple.rename(columns={'Artist Name': 'artist', 'Content Name': 'title', 'End Position In Milliseconds':'msPlayed'}, inplace=True) #rename columns
+def clean_apple(history, songs):
+    #Convert apple startTime to datetime
+    history['startTime'] = pd.to_datetime(history['Event Start Timestamp'], format='ISO8601') 
+    history['date'] = pd.to_datetime(history['startTime'].dt.date)
+    history['month'] = history['startTime'].dt.month
+    history['hour'] = history['startTime'].dt.strftime('%I %p') 
+    history['yearMonth'] = history['startTime'].dt.to_period('M').dt.to_timestamp()
+    history['hour'] = history['hour'].str.lstrip('0')
+    history['year'] = history['startTime'].dt.year
 
+    #Separate song titles and artists 
+    songs[['artist', 'title']] = songs['Track Name'].str.extract(r'^\s*(.*?)\s*-\s*(.*)$')
+    songs = songs[['artist', 'title']].copy()
+
+    #Take and rename needed apple columns
+    history = history[['Song Name', 'date', 'month', 'hour','yearMonth', 'year','Media Duration In Milliseconds']].copy()
+    history.rename(columns={'Song Name': 'title', 'Media Duration In Milliseconds': 'msPlayed'}, inplace=True)
+
+    apple = pd.merge(history, songs, on='title', how='left')
     return apple
 
 def dataframe_merge(spotifydf, youtubedf, appledf, selected_platform):
@@ -371,15 +378,22 @@ if spotify_upload or youtube_upload or apple_upload:
             youtube = clean_youtube(youtube)
             platform_options.append('youtube')
 
-    if apple_upload:
-        appledfs = []
-        for file in apple_upload:
+
+    if (apple_history_upload and apple_songs_upload):
+        appledfs_h = []
+        appledfs_s = []
+        for file in apple_history_upload:
             parsed = parse_csv(file)
             if parsed is not None:
-                appledfs.append(parsed)
-        if appledfs:
-            apple = pd.concat(appledfs, ignore_index=True)
-            apple = clean_apple(apple)
+                appledfs_h.append(parsed)
+        for file in apple_songs_upload:
+            parsed = parse_csv(file)
+            if parsed is not None:
+                appledfs_s.append(parsed)
+        if (appledfs_h and appledfs_s):
+            apple_history = pd.concat(appledfs_h, ignore_index=True)
+            apple_songs = pd.concat(appledfs_s, ignore_index=True)
+            apple = clean_apple(apple_history, apple_songs)
             platform_options.append('apple')
 
     platforms = st.multiselect("Select Platforms:", options=platform_options, default=platform_options)
