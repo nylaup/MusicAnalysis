@@ -371,7 +371,7 @@ def make_hours(dataframe):
     st.plotly_chart(fig)
 
 if spotify_upload or spotifyFull_upload or youtube_upload or apple_history_upload:
-    spotify, youtube, apple = None, None, None
+    spotify, spotifyFull, youtube, apple = None, None, None, None
 
     platform_options = []
     if spotify_upload:
@@ -427,7 +427,7 @@ if spotify_upload or spotifyFull_upload or youtube_upload or apple_history_uploa
     platforms = st.multiselect("Select Platforms:", options=platform_options, default=platform_options)
 
     if platforms:
-        music = dataframe_merge(spotify, youtube, apple, platforms)
+        music = dataframe_merge(spotify, spotifyFull, youtube, apple, platforms)
         year_options = sorted(music['year'].unique())
         year = st.multiselect("Select Year", year_options, default=year_options)
 
