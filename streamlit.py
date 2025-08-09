@@ -86,7 +86,7 @@ def clean_spotifyFull(spotifyF):
     #Convert spotifyFull ts to datetime
     spotifyF['ts'] = pd.to_datetime(spotifyF['ts']) 
     spotifyF['date'] = spotifyF['ts'].dt.date
-    spotifyF['month'] = spotifyF['endTime'].dt.month
+    spotifyF['month'] = spotifyF['ts'].dt.month
     spotifyF['hour'] = spotifyF['ts'].dt.strftime('%I %p')  
     spotifyF['yearMonth'] = spotifyF['ts'].dt.to_period('M').dt.to_timestamp()
     spotifyF['hour'] = spotifyF['hour'].str.lstrip('0')
