@@ -19,15 +19,19 @@ with st.expander("Instructions"):
     Here is the place for you to find out!       
     If not, you can also see some fun graphs from just one app.     
     In order to do this however (works best on a computer), you do have to separately request your data
-    from each platform you use... which can take a couple days... stay with me here.             
+    from each platform you use... which can take a couple days... maybe longer... stay with me here.             
     Fortunately here are convenient instructions for how to do so:        
 
     ### Spotify
     Go to account settings > Security and Privacy > Account Privacy > Download Your Data > Select Account Data > Request Data       
     You may have to confirm this request in an email. Once you get the email confirming your data is ready to download, 
     press Download. You will get a zipped file, which you will have to unzip.         
-    To find the file we need: Spotify Account Data / StreamingHistory_music_0.json        
-    Upload this file to the site in the Spotify section.        
+    To find the file we need: Spotify Account Data / StreamingHistory_music.json        
+    Upload this file (or files if you have multiple) to the site in the Spotify section.        
+    This file will only be listening history for the past year. If you would like all time data, request your Extended Streaming History,
+    which may take longer to be available.   
+    With this, once it is ready to access, unzip the folder my_spotify_data / Spotify Extended Streaming History / Streaming_History_Audio.json      
+    There will be multiple of these files, the title will have the years in them. Upload all of them to get all of your history.   
 
     ### Youtube Music      
     Go to Google Takeout for the account you want to get data for. From there deselect all checkboxes except 'Youtube and Youtube Music'.
@@ -48,7 +52,8 @@ with st.expander("Instructions"):
     """)
 
 st.markdown("#### Upload Spotify File")
-spotify_upload = st.file_uploader("StreamingHistory_music_0", type=["json"], accept_multiple_files=True)
+spotify_upload = st.file_uploader("StreamingHistory_music", type=["json"], accept_multiple_files=True)
+spotifyFull_upload = st.file_uploader("Extended Streaming_History_Audio", type=["json"], accept_multiple_files=True)
 
 st.markdown("#### Upload YouTube Music File")
 youtube_upload = st.file_uploader("watch-history", type=["json"], accept_multiple_files=True)
@@ -76,6 +81,18 @@ def clean_spotify(spotify):
     spotify['year'] = spotify['endTime'].dt.year
     spotify.rename(columns={'artistName': 'artist', 'trackName': 'title'}, inplace=True) #rename columns
     return spotify
+
+def clean_spotifyFull(spotifyF): 
+    #Convert spotifyFull ts to datetime
+    spotifyF['ts'] = pd.to_datetime(spotifyF['ts']) 
+    spotifyF['date'] = spotifyF['ts'].dt.date
+    spotifyF['month'] = spotifyF['endTime'].dt.month
+    spotifyF['hour'] = spotifyF['ts'].dt.strftime('%I %p')  
+    spotifyF['yearMonth'] = spotifyF['ts'].dt.to_period('M').dt.to_timestamp()
+    spotifyF['hour'] = spotifyF['hour'].str.lstrip('0')
+    spotifyF['year'] = spotifyF['ts'].dt.year
+    spotifyF.rename(columns={'master_metadata_album_artist_name': 'artist', 'master_metadata_track_name': 'title', 'ms_played':'msPlayed'}, inplace=True)
+    return spotifyF
 
 def clean_youtube(youtube):
     #Clean Youtube
@@ -353,7 +370,7 @@ def make_hours(dataframe):
     fig.update_layout(yaxis_title="Day of the Week", xaxis_title="Hour")
     st.plotly_chart(fig)
 
-if spotify_upload or youtube_upload or apple_history_upload:
+if spotify_upload or spotifyFull_upload or youtube_upload or apple_history_upload:
     spotify, youtube, apple = None, None, None
 
     platform_options = []
@@ -366,6 +383,16 @@ if spotify_upload or youtube_upload or apple_history_upload:
         if spotifydfs:
             spotify = pd.concat(spotifydfs, ignore_index=True)
             spotify = clean_spotify(spotify)
+            platform_options.append('spotify') 
+    if spotifyFull_upload:
+        spotifyFulldfs = []
+        for file in spotifyFull_upload:
+            parsed = parse_json(file)
+            if parsed is not None:
+                spotifyFulldfs.append(parsed)
+        if spotifyFulldfs:
+            spotifyFull = pd.concat(spotifyFulldfs, ignore_index=True)
+            spotifyFull = clean_spotifyFull(spotifyFull)
             platform_options.append('spotify') 
 
     if youtube_upload:
