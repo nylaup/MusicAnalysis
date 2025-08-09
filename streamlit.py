@@ -391,8 +391,8 @@ if spotify_upload or spotifyFull_upload or youtube_upload or apple_history_uploa
             if parsed is not None:
                 spotifyFulldfs.append(parsed)
         if spotifyFulldfs:
-            spotifyFull = pd.concat(spotifyFulldfs, ignore_index=True)
-            spotifyFull = clean_spotifyFull(spotifyFull)
+            spotify = pd.concat(spotifyFulldfs, ignore_index=True)
+            spotify = clean_spotifyFull(spotify)
             platform_options.append('spotify') 
 
     if youtube_upload:
@@ -427,7 +427,7 @@ if spotify_upload or spotifyFull_upload or youtube_upload or apple_history_uploa
     platforms = st.multiselect("Select Platforms:", options=platform_options, default=platform_options)
 
     if platforms:
-        music = dataframe_merge(spotify, spotifyFull, youtube, apple, platforms)
+        music = dataframe_merge(spotify, youtube, apple, platforms)
         year_options = sorted(music['year'].unique())
         year = st.multiselect("Select Year", year_options, default=year_options)
 
