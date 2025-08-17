@@ -105,6 +105,7 @@ def clean_youtube(youtube):
     youtube['hour'] = youtube['ListTime'].dt.strftime('%I %p') 
     youtube['hour'] = youtube['hour'].str.lstrip('0')
     youtube['year'] = youtube['ListTime'].dt.year
+    youtube['yearMonth'] = youtube['ListTime'].dt.to_period('M').dt.to_timestamp()
 
     #Clean Youtube Song Titles
     def delete_watched(value): #Eliminate 'Watched' from song titles
@@ -216,13 +217,13 @@ def make_facts(dataframe, platforms):
     topday_df = dataframe[dataframe['date']==top_day]
     topday_df = topday_df.groupby(['artist']).size().reset_index(name='listen_count').sort_values('listen_count', ascending=False)
     topday_artist = topday_df.iloc[0]['artist']
-    top_day = pd.to_datetime(top_day).strftime('%m-%d')
+    top_day = pd.to_datetime(top_day).strftime('%m-%d-%Y')
     topday_text = f"You listened to {topday_count} songs on {top_day}! Big day for you. Big day for being a fan of {topday_artist} too it seems."
 
     #Most repeated song on one day
     repeat_counts = dataframe.groupby(['date','title']).size().reset_index(name='listen_count').sort_values('listen_count', ascending=False)
     repeated_song = repeat_counts.iloc[0]['title']
-    repeated_day = pd.to_datetime(repeat_counts.iloc[0]['date']).strftime('%m-%d')
+    repeated_day = pd.to_datetime(repeat_counts.iloc[0]['date']).strftime('%m-%d-%Y')
     repeated_counts = repeat_counts.iloc[0]['listen_count']
     repeat_text = f"You listened to {repeated_song} {repeated_counts} times on {repeated_day}. A new record for you. It's that good?"
 
@@ -286,7 +287,7 @@ def make_topsongs(dataframe):
     top5_songs = dataframe[dataframe['title'].isin(top5_song)]
     monthly_song = top5_songs.groupby(['title', 'yearMonth']).size().reset_index(name='listen_count')
 
-    line = px.line(monthly_song, x="yearMonth", y="listen_count", color="title", title="Top 5 Songs Through the Year")
+    line = px.line(monthly_song, x="yearMonth", y="listen_count", color="title", title="Top 5 Songs Through the Time Period")
     line.update_layout(xaxis_title='Month of Year', yaxis_title='Listen Count')
     st.plotly_chart(line)
 
@@ -323,7 +324,7 @@ def make_topartists(dataframe):
     for i, artist in enumerate(non_top5_artists):
         custom_color_map[artist] = grayscale_colors[i % len(grayscale_colors)]
 
-    fig = px.bar(top3_artists, x="yearMonth", y="listen_count", color="artist", 
+    fig = px.bar(top3_artists, x="yearMonth", y="listen_count", color="artist", labels={"artist":"Top 5 Artists"},
              color_discrete_map=custom_color_map, barmode="stack", title="Top 3 artists per month")
     for trace in fig.data: #Legend only has top5
         if trace.name not in top5_artists_overall:
@@ -357,7 +358,7 @@ def artist_info(dataframe, chosen_artist):
     bigdog_music = bigdog.groupby(['title']).size().reset_index(name='count').sort_values('count', ascending=False).head(3)
     favsongs = bigdog_music['title'].tolist()
 
-    first_listen = bigdog['date'].min().strftime('%m-%d')
+    first_listen = bigdog['date'].min().strftime('%m-%d-%Y')
     say= f"Love at first sight... On {first_listen}, precisely, for you and {chosen_artist} that is. \nSince then you've been a big fan of {", ".join((favsongs)[:2])}, and {favsongs[2]}."
     st.text(say)
 
